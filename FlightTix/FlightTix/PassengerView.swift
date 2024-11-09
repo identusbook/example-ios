@@ -16,9 +16,15 @@ enum Flights: String, CaseIterable, Identifiable {
 
 struct PassengerView: View {
     
+    @State private var presentingProfile = false
+    
     @State private var selectedFlight: Flights = .atl2scl
     
-    private func showProfile() {}
+    private func showProfile() {
+        presentingProfile = true
+    }
+    
+    private func didDismiss() {}
     
     var body: some View {
         ZStack {
@@ -48,6 +54,10 @@ struct PassengerView: View {
                         Image(systemName: "person.crop.circle.fill")
                     }
                     .padding(.trailing, 24)
+                    .fullScreenCover(isPresented: $presentingProfile, onDismiss: didDismiss, content: {
+                        Profile()
+                    })
+                    
                 }
                 .padding(.top, 8)
                 Spacer()
