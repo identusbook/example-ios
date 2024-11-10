@@ -8,8 +8,20 @@
 import SwiftUI
 
 struct SecurityView: View {
+    
+    private func requestProof(){}
+    
     var body: some View {
-        Text("Hello, Security!")
+        ZStack {
+            VStack {
+                Button  {
+                    requestProof()
+                } label: {
+                    Text("Request Proof of Ticket")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
     }
 }
 

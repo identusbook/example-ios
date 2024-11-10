@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-enum Flights: String, CaseIterable, Identifiable {
-    case atl2scl = "ATL -> SCL 20:00 Mar 23, 2025",
-         ams2vie = "AMS -> VIE 09:30 May 29, 2025",
-         sfo2hnd = "SFO -> HND 11:00 Oct 25, 2025"
-    var id: Self { self }
-}
-
 struct PassengerView: View {
     
     @State private var presentingProfile = false
@@ -52,6 +45,8 @@ struct PassengerView: View {
                         showProfile()
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 44, height: 44)
                     }
                     .padding(.trailing, 24)
                     .fullScreenCover(isPresented: $presentingProfile, onDismiss: didDismiss, content: {
