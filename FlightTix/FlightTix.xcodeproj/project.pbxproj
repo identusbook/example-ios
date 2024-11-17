@@ -195,6 +195,9 @@
 			);
 			mainGroup = FCC0A7792CE00D3D00649302;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FC2C24E12CEAA9FE00B59F13 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
 			projectDirPath = "";
@@ -591,6 +594,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FC2C24E12CEAA9FE00B59F13 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hyperledger/identus-edge-agent-sdk-swift/";
+			requirement = {
+				kind = exactVersion;
+				version = 7.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = FCC0A77A2CE00D3D00649302 /* Project object */;
 }
