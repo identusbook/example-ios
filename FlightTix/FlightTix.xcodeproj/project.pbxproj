@@ -72,12 +72,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FC4A95F52CF2FF8D0004D292 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FCC0A7792CE00D3D00649302 = {
 			isa = PBXGroup;
 			children = (
 				FCC0A7842CE00D3D00649302 /* FlightTix */,
 				FCC0A7962CE00D3E00649302 /* FlightTixTests */,
 				FCC0A7A02CE00D3E00649302 /* FlightTixUITests */,
+				FC4A95F52CF2FF8D0004D292 /* Frameworks */,
 				FCC0A7832CE00D3D00649302 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -196,7 +204,6 @@
 			mainGroup = FCC0A7792CE00D3D00649302;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FC2C24E12CEAA9FE00B59F13 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
@@ -412,7 +419,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.covelop.FlightTix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -451,7 +458,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.covelop.FlightTix;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -594,17 +601,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		FC2C24E12CEAA9FE00B59F13 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/hyperledger/identus-edge-agent-sdk-swift/";
-			requirement = {
-				kind = exactVersion;
-				version = 7.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = FCC0A77A2CE00D3D00649302 /* Project object */;
 }

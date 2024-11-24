@@ -14,24 +14,84 @@ enum Flights: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+enum NavigationItem {
+    case purchase
+    case ticket
+    case security
+}
+
+enum ViewState {
+    case loading
+    case login
+    case tabs
+}
+
 struct ContentView: View {
+    
+    @State var showRegisterScreen: Bool = false
+    @State private var selectedTab: NavigationItem = .purchase
+    @State private var viewState: ViewState = .loading
+    
+    private func reloadModels() { print("reloading models...") }
+    
     var body: some View {
-        TabView {
-            PassengerView()
-                .tabItem {
-                    Label("Purchase", systemImage: "airplane")
+        
+        switch viewState {
+        case .loading:
+            LoadingScreen()
+                .onAppear() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        viewState = .tabs
+                    }
                 }
-            
-            TicketView()
-                .tabItem {
-                    Label("Ticket", systemImage: "ticket")
+        case .login:
+            RegisterScreen()
+        case .tabs:
+            TabView(selection: $selectedTab) {
+                PassengerView()
+                    .tabItem {
+                        Label("Purchase", systemImage: "airplane")
+                    }
+                    .tag(NavigationItem.purchase)
+                
+                TicketTab()
+                    .tabItem {
+                        Label("Ticket", systemImage: "ticket")
+                    }
+                    .tag(NavigationItem.ticket)
+                
+                SecurityView()
+                    .tabItem {
+                        Label("Airport Security", systemImage: "hand.raised.circle")
+                    }
+                    .tag(NavigationItem.security)
             }
-            
-            SecurityView()
-                .tabItem {
-                    Label("Airport Security", systemImage: "hand.raised.circle")
+            .onAppear() {
+                Task {
+                    _ = await showRegisterScreenIfNoLoginVC()
                 }
+            }
+            .onChange(of: selectedTab) { newState in
+                Task {
+                    _ = await showRegisterScreenIfNoLoginVC()
+                }
+            }
+            .fullScreenCover(isPresented: $showRegisterScreen,
+                             onDismiss: reloadModels,
+                             content: {
+                RegisterScreen()
+            })
         }
+    }
+    
+    @MainActor
+    private func showRegisterScreenIfNoLoginVC() async -> Bool {
+        
+        // Check for existince of Login VC
+        
+        // If no Login VC, show Register Screen
+        showRegisterScreen = true
+        return true
     }
 }
 

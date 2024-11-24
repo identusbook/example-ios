@@ -11,6 +11,8 @@ struct Profile: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    var traveller: Traveller?
+    
     private func logout() {
         dismiss()
     }
@@ -21,13 +23,16 @@ struct Profile: View {
                 Text("Profile")
                 
                 Form {
-                    Text("DID: ")
+                    Text("Name: \(String(describing: traveller?.name))")
+                    Text("DID: \(String(describing: traveller?.did))")
+                    Text("Passport Number: \(String(describing: traveller?.passportNumber))")
+                    Text("Birthdate: \(String(describing: traveller?.dob))")
                 }
                 
                 Button  {
                     logout()
                 } label: {
-                    Text("Logout")
+                    Text("Close")
                 }
                 
                 Spacer()
