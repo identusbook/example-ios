@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import EdgeAgentSDK
 
 enum Flights: String, CaseIterable, Identifiable {
     case atl2scl = "ATL -> SCL 20:00 Mar 23, 2025",
