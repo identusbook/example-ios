@@ -6,6 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FC3DE74B2CF7771A00D454D3 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74A2CF7771A00D454D3 /* Apollo */; };
+		FC3DE74D2CF7771A00D454D3 /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74C2CF7771A00D454D3 /* Authenticate */; };
+		FC3DE74F2CF7771A00D454D3 /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74E2CF7771A00D454D3 /* Builders */; };
+		FC3DE7512CF7771A00D454D3 /* Castor in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7502CF7771A00D454D3 /* Castor */; };
+		FC3DE7532CF7771A00D454D3 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7522CF7771A00D454D3 /* Domain */; };
+		FC3DE7552CF7771A00D454D3 /* EdgeAgent in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7542CF7771A00D454D3 /* EdgeAgent */; };
+		FC3DE7572CF7771A00D454D3 /* EdgeAgentSDK in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */; };
+		FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7582CF7771A00D454D3 /* Mercury */; };
+		FC3DE75B2CF7771A00D454D3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75A2CF7771A00D454D3 /* Pluto */; };
+		FC3DE75D2CF7771A00D454D3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75C2CF7771A00D454D3 /* Pollux */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		FCC0A7942CE00D3E00649302 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +65,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FC3DE75D2CF7771A00D454D3 /* Pollux in Frameworks */,
+				FC3DE75B2CF7771A00D454D3 /* Pluto in Frameworks */,
+				FC3DE7532CF7771A00D454D3 /* Domain in Frameworks */,
+				FC3DE74F2CF7771A00D454D3 /* Builders in Frameworks */,
+				FC3DE74B2CF7771A00D454D3 /* Apollo in Frameworks */,
+				FC3DE7552CF7771A00D454D3 /* EdgeAgent in Frameworks */,
+				FC3DE7512CF7771A00D454D3 /* Castor in Frameworks */,
+				FC3DE7572CF7771A00D454D3 /* EdgeAgentSDK in Frameworks */,
+				FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */,
+				FC3DE74D2CF7771A00D454D3 /* Authenticate in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +143,16 @@
 			);
 			name = FlightTix;
 			packageProductDependencies = (
+				FC3DE74A2CF7771A00D454D3 /* Apollo */,
+				FC3DE74C2CF7771A00D454D3 /* Authenticate */,
+				FC3DE74E2CF7771A00D454D3 /* Builders */,
+				FC3DE7502CF7771A00D454D3 /* Castor */,
+				FC3DE7522CF7771A00D454D3 /* Domain */,
+				FC3DE7542CF7771A00D454D3 /* EdgeAgent */,
+				FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */,
+				FC3DE7582CF7771A00D454D3 /* Mercury */,
+				FC3DE75A2CF7771A00D454D3 /* Pluto */,
+				FC3DE75C2CF7771A00D454D3 /* Pollux */,
 			);
 			productName = FlightTix;
 			productReference = FCC0A7822CE00D3D00649302 /* FlightTix.app */;
@@ -204,6 +237,7 @@
 			mainGroup = FCC0A7792CE00D3D00649302;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
@@ -601,6 +635,70 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:hyperledger/identus-edge-agent-sdk-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FC3DE74A2CF7771A00D454D3 /* Apollo */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Apollo;
+		};
+		FC3DE74C2CF7771A00D454D3 /* Authenticate */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Authenticate;
+		};
+		FC3DE74E2CF7771A00D454D3 /* Builders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Builders;
+		};
+		FC3DE7502CF7771A00D454D3 /* Castor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Castor;
+		};
+		FC3DE7522CF7771A00D454D3 /* Domain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Domain;
+		};
+		FC3DE7542CF7771A00D454D3 /* EdgeAgent */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = EdgeAgent;
+		};
+		FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = EdgeAgentSDK;
+		};
+		FC3DE7582CF7771A00D454D3 /* Mercury */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Mercury;
+		};
+		FC3DE75A2CF7771A00D454D3 /* Pluto */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Pluto;
+		};
+		FC3DE75C2CF7771A00D454D3 /* Pollux */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			productName = Pollux;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FCC0A77A2CE00D3D00649302 /* Project object */;
 }
