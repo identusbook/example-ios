@@ -11,6 +11,8 @@ struct Profile: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @State private var profileLoaded: Bool = false
+    
     var traveller: Traveller?
     
     private func logout() {
@@ -19,23 +21,34 @@ struct Profile: View {
     
     var body: some View {
         ZStack {
-            VStack {
-                Text("Profile")
-                
-                Form {
-                    Text("Name: \(String(describing: traveller?.name))")
-                    Text("DID: \(String(describing: traveller?.did))")
-                    Text("Passport Number: \(String(describing: traveller?.passportNumber))")
-                    Text("Birthdate: \(String(describing: traveller?.dob))")
+            if !profileLoaded {
+                Text("Loading Profile...")
+            } else {
+                VStack {
+                    Text("Profile")
+                    
+                    Form {
+                        Text("Name: \(String(describing: traveller?.name))")
+                        Text("DID: \(String(describing: traveller?.did))")
+                        Text("Passport Number: \(String(describing: traveller?.passportNumber))")
+                        Text("Birthdate: \(String(describing: traveller?.dob))")
+                    }
+                    
+                    Button  {
+                        logout()
+                    } label: {
+                        Text("Close")
+                    }
+                    
+                    Spacer()
                 }
-                
-                Button  {
-                    logout()
-                } label: {
-                    Text("Close")
-                }
-                
-                Spacer()
+            }
+        }
+        .onAppear() {
+            // Check for Passport VC
+            // Load data from Passport VC
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                profileLoaded = true
             }
         }
     }
