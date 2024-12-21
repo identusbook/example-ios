@@ -93,14 +93,6 @@ struct ContentView: View {
         if !Auth.shared.isLoggedIn() {
             showRegisterScreen = true
         }
-        do {
-            try await Auth.shared.login(passport: Passport(name: "Jon Bauer",
-                                                           did: "123456789",
-                                                           passportNumber: "123456789",
-                                                           dob: Date()))
-        } catch {
-            print(error)
-        }
     }
 }
 

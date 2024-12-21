@@ -47,6 +47,7 @@ struct Profile: View {
         .onAppear() {
             // Check for Passport VC
             // Load data from Passport VC
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 profileLoaded = true
             }
