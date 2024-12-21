@@ -28,10 +28,10 @@ struct Profile: View {
                     Text("Profile")
                     
                     Form {
-                        Text("Name: \(String(describing: traveller?.name))")
-                        Text("DID: \(String(describing: traveller?.did))")
-                        Text("Passport Number: \(String(describing: traveller?.passportNumber))")
-                        Text("Birthdate: \(String(describing: traveller?.dob))")
+                        Text("Name: \(String(describing: traveller?.passport.name))")
+                        Text("DID: \(String(describing: traveller?.passport.did))")
+                        Text("Passport Number: \(String(describing: traveller?.passport.passportNumber))")
+                        Text("Birthdate: \(String(describing: traveller?.passport.dob))")
                     }
                     
                     Button  {

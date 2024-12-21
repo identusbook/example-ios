@@ -29,6 +29,9 @@ enum ViewState {
 
 struct ContentView: View {
     
+    @State private var identus: Identus?
+    @State private var auth: Auth?
+    
     @State var showRegisterScreen: Bool = false
     @State private var selectedTab: NavigationItem = .purchase
     @State private var viewState: ViewState = .loading
@@ -86,13 +89,20 @@ struct ContentView: View {
     }
     
     @MainActor
-    private func showRegisterScreenIfNoLoginVC() async -> Bool {
+    private func showRegisterScreenIfNoLoginVC() async {
+        if !Auth.shared.isLoggedIn() {
+            showRegisterScreen = true
+        }
+        do {
+            try await Auth.shared.login(passport: Passport(name: "Jon Bauer",
+                                                           did: "123456789",
+                                                           passportNumber: "123456789",
+                                                           dob: Date()))
+        } catch {
+            print(error)
+        }
         
-        // Check for existince of Login VC
-        
-        // If no Login VC, show Register Screen
         showRegisterScreen = true
-        return true
     }
 }
 

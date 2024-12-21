@@ -24,8 +24,9 @@ struct TicketView: View {
 #Preview {
     TicketView(ticket: Ticket(flight: .ams2vie,
                               price: 500.0,
-                              traveller: Traveller(name: "Jon Bauer",
-                                                   did: "123456789",
-                                                   passportNumber: "123098",
-                                                   dob: Date())))
+                              traveller: Traveller(passport: Passport(name: "Jon Bauer",
+                                                                      did: "123456789",
+                                                                      passportNumber: "123456789",
+                                                                      dob: Date())
+                              )))
 }

@@ -9,11 +9,7 @@
 import Foundation
 
 struct Traveller {
-    let id: UUID = UUID()
-    let name: String
-    let did: String
-    let passportNumber: String
-    let dob: Date
+    let passport: Passport
     var tickets: [Ticket] = []
         
     public func createDID() {
