@@ -101,8 +101,6 @@ struct ContentView: View {
         } catch {
             print(error)
         }
-        
-        showRegisterScreen = true
     }
 }
 
