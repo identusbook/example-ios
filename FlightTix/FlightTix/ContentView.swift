@@ -44,8 +44,51 @@ struct ContentView: View {
         case .loading:
             LoadingScreen()
                 .onAppear() {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        viewState = .tabs
+                    
+                    // Initialize Identus, if we fail to initialize, throw error
+                    Task {
+                        do {
+                            if let identus = try Identus(config: IdentusConfig()) {
+                                
+                                print(identus.status)
+                                try await identus.start()
+                                identus.startMessageStream()
+                                print(identus.status)
+
+                                
+                                // Get stored connectionID
+                                if !identus.connectionExists(connectionId: "", label: "") {
+                                    // Estabilish Connection with Cloud Agent
+                                    
+                                    var invitationFromCloudAgent: OutOfBandInvitation?
+                                    do {
+                                        invitationFromCloudAgent = try await identus.parseCloudAgentOOBMessage()
+                                    } catch {
+                                        print("parseOOBMessage threw an error")
+                                        print(error)
+                                    }
+                                    
+                                    guard let invitationFromCloudAgent else { return }
+                                    do {
+                                        try await identus.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
+                                    } catch {
+                                        print("acceptDIDCommInvite threw an error")
+                                        print(error)
+                                    }
+                                }
+                                print(identus.status)
+                            
+                            }
+                        } catch {
+                            throw error
+                        }
+                        
+                        //if let identusStatus = identus?.status, identusStatus == "running" {
+                            print("we should transition from LoadingScreen to Content")
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                viewState = .tabs
+                            }
+                        //}
                     }
                 }
         case .login:
