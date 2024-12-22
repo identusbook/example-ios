@@ -17,6 +17,7 @@
 		FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7582CF7771A00D454D3 /* Mercury */; };
 		FC3DE75B2CF7771A00D454D3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75A2CF7771A00D454D3 /* Pluto */; };
 		FC3DE75D2CF7771A00D454D3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75C2CF7771A00D454D3 /* Pollux */; };
+		FC4D618F2D18CC1200CB2733 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FC4D618E2D18CC1200CB2733 /* KeychainSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 				FC3DE74F2CF7771A00D454D3 /* Builders in Frameworks */,
 				FC3DE74B2CF7771A00D454D3 /* Apollo in Frameworks */,
 				FC3DE7552CF7771A00D454D3 /* EdgeAgent in Frameworks */,
+				FC4D618F2D18CC1200CB2733 /* KeychainSwift in Frameworks */,
 				FC3DE7512CF7771A00D454D3 /* Castor in Frameworks */,
 				FC3DE7572CF7771A00D454D3 /* EdgeAgentSDK in Frameworks */,
 				FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */,
@@ -153,6 +155,7 @@
 				FC3DE7582CF7771A00D454D3 /* Mercury */,
 				FC3DE75A2CF7771A00D454D3 /* Pluto */,
 				FC3DE75C2CF7771A00D454D3 /* Pollux */,
+				FC4D618E2D18CC1200CB2733 /* KeychainSwift */,
 			);
 			productName = FlightTix;
 			productReference = FCC0A7822CE00D3D00649302 /* FlightTix.app */;
@@ -238,6 +241,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */,
+				FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
@@ -653,6 +657,14 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/keychain-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -705,6 +717,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
 			productName = Pollux;
+		};
+		FC4D618E2D18CC1200CB2733 /* KeychainSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -48,14 +48,14 @@ struct ContentView: View {
                     // Initialize Identus, if we fail to initialize, throw error
                     Task {
                         do {
-                            if let identus = try Identus(config: IdentusConfig()) {
+                              let identus = try Identus(config: IdentusConfig())
                                 
                                 print(identus.status)
+                                //try await identus.tearDown() -- only needed to reset the state during dev
                                 try await identus.start()
                                 identus.startMessageStream()
                                 print(identus.status)
 
-                                
                                 // Get stored connectionID
                                 if !identus.connectionExists(connectionId: "", label: "") {
                                     // Estabilish Connection with Cloud Agent
@@ -78,7 +78,6 @@ struct ContentView: View {
                                 }
                                 print(identus.status)
                             
-                            }
                         } catch {
                             throw error
                         }
