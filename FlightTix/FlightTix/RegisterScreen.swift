@@ -9,16 +9,11 @@ import SwiftUI
 
 struct RegisterScreen: View {
     
+    final class RegisterFormIncompleteError: Error {}
+    
     @Environment(\.dismiss) private var dismiss
     
-    private func onRegisterSubmit(){
-        // Save Passport info in keychain
-        // Request Airline to Issue a Login VC
-        // Wait for Issuance
-        // Dismiss LoginScreen
-        print("Handle Registration / Login VC Issuance here")
-        dismiss()
-    }
+    @StateObject var model: RegisterViewModel = RegisterViewModel()
     
     @State var showChoices: Bool = true
     @State var showRegisterForm: Bool = false
@@ -26,6 +21,25 @@ struct RegisterScreen: View {
     @State private var name: String = ""
     @State private var passportNumber: String = ""
     @State private var date = Date()
+    
+    private func onRegisterSubmit() async throws {
+        
+        guard name.count > 1, passportNumber.count > 1 else {
+            throw RegisterFormIncompleteError()
+        }
+        
+        do {
+            try await model.register(passport: Passport(name: name,
+                                                        did: "123456789",
+                                                        passportNumber: passportNumber,
+                                                        dob: Date()))
+        } catch {
+            throw error
+        }
+        
+        // Dismiss LoginScreen
+        dismiss()
+    }
     
     var body: some View {
         ZStack {
@@ -43,7 +57,9 @@ struct RegisterScreen: View {
                     
                     Section {
                         Button {
-                            onRegisterSubmit()
+                            Task {
+                                try await onRegisterSubmit()
+                            }
                         } label: {
                             Text("Submit")
                         }
