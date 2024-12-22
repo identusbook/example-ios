@@ -8,33 +8,33 @@
 import Combine
 import Foundation
 import EdgeAgentSDK
+import KeychainSwift
 
 final class Identus: ObservableObject {
     
+    final class SeedFailedToSaveToKeychainError: Error {}
+    final class SeedKeychainKeyNotPresentError: Error {}
+    final class SeedFailedToDeleteFromKeychainError: Error {}
+    
     // Config
     let mediatorOOBURL: URL
+    let mediatorDID: DID
+    let seedKeychainKey: String
     //let oobInvitation: OutOfBandInvitation?
     
     @Published var agentRunning = false
     
     //private var edgeAgent: EdgeAgent
-    private var didCommAgent: DIDCommAgent
+    private var didCommAgent: DIDCommAgent?
     @Published var status: String = ""
     @Published var error: String?
     
     private var cancellables = Set<AnyCancellable>()
     
-    init?(config: IdentusConfig) throws {
+    init(config: IdentusConfig) throws {
         mediatorOOBURL = URL(string: config.mediatorOOBString)!
-        let did = try! DID(string: config.mediatorDidString)
-
-        // Check Keychain for existing Seed
-        // Get Seed Data from KeyChain
-        // If no seed, Call Apollo directly, create a seed (with empty or random passphrase), save it in keychain, start mediator with that seed
-        //self.didCommAgent = DIDCommAgent(mediatorDID: did, seedData: Data)
-        self.didCommAgent = DIDCommAgent(mediatorDID: did)
-        status = didCommAgent.state.rawValue
-    
+        mediatorDID = try! DID(string: config.mediatorDidString)
+        seedKeychainKey = config.seedKeychainKey
     }
     
     public func parseCloudAgentOOBMessage() async throws -> OutOfBandInvitation? {
@@ -45,7 +45,7 @@ final class Identus: ObservableObject {
         let oobURLFromCloudAgent = URL(string: oobStringFromCloudAgent)!
         
         do {
-            return try didCommAgent.parseOOBInvitation(url: oobURLFromCloudAgent)
+            return try didCommAgent?.parseOOBInvitation(url: oobURLFromCloudAgent)
         } catch let error as CommonError {
             switch error {
             case let .httpError(_, message):
@@ -63,7 +63,7 @@ final class Identus: ObservableObject {
         
         do {
             print("Attempt to accept Cloud Agent Invitation")
-            try await didCommAgent.acceptDIDCommInvitation(invitation: invitationFromCloudAgent)
+            try await didCommAgent?.acceptDIDCommInvitation(invitation: invitationFromCloudAgent)
             print("we should have accepted the invitation")
 
         } catch let error as CommonError {
@@ -81,24 +81,76 @@ final class Identus: ObservableObject {
     
     func start() async throws {
         await MainActor.run {
-            status = didCommAgent.state.rawValue
+            status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
         }
         do {
-            try await didCommAgent.start()
+            
+            if let seed = seedExists(key: seedKeychainKey) {
+                self.didCommAgent = DIDCommAgent(seedData: seed.value, mediatorDID: mediatorDID)
+            } else {
+                let seed = try await generateSeed()
+                self.didCommAgent = DIDCommAgent(seedData: seed.value, mediatorDID: mediatorDID)
+            }
+            
+            status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
+            
+            try await didCommAgent?.start()
         } catch {
             await MainActor.run {
                 self.error = error.localizedDescription
             }
         }
         await MainActor.run {
-            status = didCommAgent.state.rawValue
+            status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
+        }
+    }
+    
+    private func seedExists(key: String) -> Seed? {
+        let keychain = KeychainSwift()
+        if let seedData = keychain.getData(key) {
+            return Seed(value: seedData)
+        }
+        return nil
+    }
+    
+    private func generateSeed() async throws -> Seed {
+        let apollo = ApolloImpl()
+        // create Random Seed for demo purposes
+        let (_, seed) = apollo.createRandomSeed()
+        
+        // Store new Seed in Keychain
+        let keychain = KeychainSwift()
+        keychain.set(seed.value, forKey: seedKeychainKey)
+        if keychain.lastResultCode != noErr {
+            throw SeedFailedToSaveToKeychainError()
+        }
+        if let seed = seedExists(key: seedKeychainKey) {
+            return seed
+        }
+        throw SeedFailedToSaveToKeychainError()
+    }
+    
+    private func deleteSeedFromKeychain() -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.delete(seedKeychainKey) ? true : false
+    }
+    
+    // Meant mostly for testing during development
+    // Cleans up Agent and related artifacts
+    public func tearDown() async throws {
+        do {
+            try await didCommAgent?.stop()
+            guard deleteSeedFromKeychain() else { throw SeedFailedToDeleteFromKeychainError() }
+            print("Identus has been torn down")
+        } catch {
+            throw error
         }
     }
     
     @MainActor
     func startMessageStream() {
-        didCommAgent.startFetchingMessages()
-        didCommAgent.handleReceivedMessagesEvents().sink {
+        didCommAgent?.startFetchingMessages()
+        didCommAgent?.handleReceivedMessagesEvents().sink {
             switch $0 {
             case .finished:
                 print("Finished message retrieval")
@@ -108,10 +160,6 @@ final class Identus: ObservableObject {
         } receiveValue: { message -> () in
             
             //print("Message is: \(message)")
-            
-//            if let credentialPreview = try? CredentialPreview(fromMessage: message) {
-//                print("CredentialPreview: \(credentialPreview)")
-//            }
             
             if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
                 print("ConnectionAccept: \(connectionAccept)")
