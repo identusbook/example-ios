@@ -20,7 +20,7 @@ final class Identus: ObservableObject {
     let mediatorOOBURL: URL
     let mediatorDID: DID
     let seedKeychainKey: String
-    //let oobInvitation: OutOfBandInvitation?
+    let urlSessionConfig: URLSessionConfig
     
     @Published var agentRunning = false
     
@@ -35,14 +35,25 @@ final class Identus: ObservableObject {
         mediatorOOBURL = URL(string: config.mediatorOOBString)!
         mediatorDID = try! DID(string: config.mediatorDidString)
         seedKeychainKey = config.seedKeychainKey
+        urlSessionConfig = config.urlSessionConfig
     }
     
-    public func parseCloudAgentOOBMessage() async throws -> OutOfBandInvitation? {
+    public func createInvitation() async throws -> OutOfBandInvitation? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let invitation = try await networkActor.cloudAgent.createInvitation() else { return nil }
+            return try await parseCloudAgentOOBMessage(invitation: invitation)
+        } catch {
+            throw error
+        }
+    }
+    
+    private func parseCloudAgentOOBMessage(invitation: CreateInvitationResponse) async throws -> OutOfBandInvitation? {
         
-        // TODO: make this dynamic
-        let oobStringFromCloudAgent = "https://my.domain.com/path?_oob=eyJpZCI6ImE4NmJjMDc0LWIzODAtNGQxNi1hNzgwLWU5Y2ZmOWY2YTYxMiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoeFU2SExoVzdmYmFzYVU5ZDJWUFB0NENreVE2Rko1NXBQSm1Ud1pCclluaC5WejZNa2kxdk1hc014c0dFRkUzV0U3aDJheXNGTkVrM2pOcko4ZDdNVFB3SlU1MUw4LlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTlvYjNOMExtUnZZMnRsY2k1cGJuUmxjbTVoYkRvNE1DOWthV1JqYjIxdElpd2ljaUk2VzEwc0ltRWlPbHNpWkdsa1kyOXRiUzkyTWlKZGZYMCIsImJvZHkiOnsiYWNjZXB0IjpbXX19"
+//        // TODO: make this dynamic
+//        let oobStringFromCloudAgent = "https://my.domain.com/path?_oob=eyJpZCI6ImE4NmJjMDc0LWIzODAtNGQxNi1hNzgwLWU5Y2ZmOWY2YTYxMiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoeFU2SExoVzdmYmFzYVU5ZDJWUFB0NENreVE2Rko1NXBQSm1Ud1pCclluaC5WejZNa2kxdk1hc014c0dFRkUzV0U3aDJheXNGTkVrM2pOcko4ZDdNVFB3SlU1MUw4LlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTlvYjNOMExtUnZZMnRsY2k1cGJuUmxjbTVoYkRvNE1DOWthV1JqYjIxdElpd2ljaUk2VzEwc0ltRWlPbHNpWkdsa1kyOXRiUzkyTWlKZGZYMCIsImJvZHkiOnsiYWNjZXB0IjpbXX19"
         
-        let oobURLFromCloudAgent = URL(string: oobStringFromCloudAgent)!
+        let oobURLFromCloudAgent = URL(string: invitation.invitation.invitationUrl)!
         
         do {
             return try didCommAgent?.parseOOBInvitation(url: oobURLFromCloudAgent)
@@ -226,6 +237,6 @@ final class Identus: ObservableObject {
 //                                 'http://localhost/cloud-agent/connections' \
 //                                 -H 'Content-Type: application/json' \
 //                                 -d '{ "label": "Connect with Alice" }' | jq
-        return true
+        return false
     }
 }

@@ -48,46 +48,33 @@ struct ContentView: View {
                     // Initialize Identus, if we fail to initialize, throw error
                     Task {
                         do {
-                              let identus = try Identus(config: IdentusConfig())
-                                
-                                print(identus.status)
-                                //try await identus.tearDown() -- only needed to reset the state during dev
-                                try await identus.start()
-                                identus.startMessageStream()
-                                print(identus.status)
-
-                                // Get stored connectionID
-                                if !identus.connectionExists(connectionId: "", label: "") {
-                                    // Estabilish Connection with Cloud Agent
-                                    
-                                    var invitationFromCloudAgent: OutOfBandInvitation?
-                                    do {
-                                        invitationFromCloudAgent = try await identus.parseCloudAgentOOBMessage()
-                                    } catch {
-                                        print("parseOOBMessage threw an error")
-                                        print(error)
-                                    }
-                                    
+                            let identus = try Identus(config: IdentusConfig())
+                            
+                            //try await identus.tearDown() // -- only needed to reset the state during dev
+                            try await identus.start()
+                            identus.startMessageStream()
+                            
+                            if !identus.connectionExists(connectionId: "", label: "") {
+                                do {
+                                    let invitationFromCloudAgent = try await identus.createInvitation()
                                     guard let invitationFromCloudAgent else { return }
-                                    do {
-                                        try await identus.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
-                                    } catch {
-                                        print("acceptDIDCommInvite threw an error")
-                                        print(error)
-                                    }
+                                    try await identus.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
+                                } catch {
+                                    print(error)
                                 }
-                                print(identus.status)
+                            }
+                            print(identus.status)
                             
                         } catch {
                             throw error
                         }
                         
-                        //if let identusStatus = identus?.status, identusStatus == "running" {
+                        if let identusStatus = identus?.status, identusStatus == "running" {
                             print("we should transition from LoadingScreen to Content")
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                                 viewState = .tabs
                             }
-                        //}
+                        }
                     }
                 }
         case .login:

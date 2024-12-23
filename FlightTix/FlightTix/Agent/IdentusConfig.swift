@@ -14,4 +14,5 @@ struct IdentusConfig {
     let mediatorDidString: String = "did:peer:2.Ez6LSms555YhFthn1WV8ciDBpZm86hK9tp83WojJUmxPKg1hZ.Vz6MkmdBjMyB4TS5UbbQw54szm8yvMMf1ftGV2sQVYAxaeWhE"
     
     let seedKeychainKey: String = "FlightTixSeed"
+    let urlSessionConfig: URLSessionConfig = FlightTixSessionConfigStruct()
 }
