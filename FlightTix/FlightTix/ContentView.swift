@@ -49,11 +49,12 @@ struct ContentView: View {
                     Task {
                         do {
                             let identus = try Identus(config: IdentusConfig())
+                            //try await identus.tearDown()
                             try await identus.start()
                             identus.startMessageStream()
                             
                             if try await !identus.connectionExists(connectionId: "",
-                                                                   label: IdentusConfig().connectionLabel) {
+                                                                   label: IdentusConfig().cloudAgentConnectionLabel) {
                                 do {
                                     let invitationFromCloudAgent = try await identus.createInvitation()
                                     guard let invitationFromCloudAgent else { return }
@@ -64,15 +65,15 @@ struct ContentView: View {
                             }
                             print(identus.status)
                             
+                            if identus.status == "running" {
+                                print("we should transition from LoadingScreen to Content")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    viewState = .tabs
+                                }
+                            }
+                            
                         } catch {
                             throw error
-                        }
-                        
-                        if let identusStatus = identus?.status, identusStatus == "running" {
-                            print("we should transition from LoadingScreen to Content")
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                viewState = .tabs
-                            }
                         }
                     }
                 }
