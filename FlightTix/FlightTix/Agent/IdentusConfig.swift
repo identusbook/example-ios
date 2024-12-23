@@ -16,5 +16,6 @@ struct IdentusConfig {
     let seedKeychainKey: String = "FlightTixSeed"
     let urlSessionConfig: URLSessionConfig = FlightTixSessionConfigStruct()
     
-    let connectionLabel: String = "FlightTixiOS"
+    let cloudAgentConnectionLabel: String = "FlightTixiOS-CloudAgent"
+    let cloudAgentConnectionIdKeychainKey: String = "CloudAgentConnectionId"
 }

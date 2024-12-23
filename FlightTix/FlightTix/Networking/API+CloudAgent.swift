@@ -18,7 +18,7 @@ extension APIClient {
         
         func createInvitation() async throws -> CreateInvitationResponse? {
             
-            let createInvitationBody = CreateInvitationRequest(label: "FlightTixiOS")
+            let createInvitationBody = CreateInvitationRequest(label: IdentusConfig().cloudAgentConnectionLabel)
             let encoder = JSONEncoder()
             guard let bodyData = try? encoder.encode(createInvitationBody) else { return nil }
             

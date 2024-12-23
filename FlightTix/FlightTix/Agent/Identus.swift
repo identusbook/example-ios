@@ -20,6 +20,7 @@ final class Identus: ObservableObject {
     let mediatorOOBURL: URL
     let mediatorDID: DID
     let seedKeychainKey: String
+    let cloudAgentConnectionIdKeychainKey: String
     let urlSessionConfig: URLSessionConfig
     
     @Published var agentRunning = false
@@ -35,6 +36,7 @@ final class Identus: ObservableObject {
         mediatorOOBURL = URL(string: config.mediatorOOBString)!
         mediatorDID = try! DID(string: config.mediatorDidString)
         seedKeychainKey = config.seedKeychainKey
+        cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
         urlSessionConfig = config.urlSessionConfig
     }
     
@@ -85,6 +87,11 @@ final class Identus: ObservableObject {
             print("Error: \(String(describing: error.errorDescription))")
         }
         
+    }
+    
+    private func storeConnectionId(connectionId: String) -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.set(connectionId, forKey: cloudAgentConnectionIdKeychainKey)
     }
     
     func start() async throws {
@@ -172,6 +179,9 @@ final class Identus: ObservableObject {
             if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
                 print("ConnectionAccept: \(connectionAccept)")
                 // Store connectionId
+                if !self.storeConnectionId(connectionId: connectionAccept.id) {
+                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
+                }
                 // Or can get this info from the wallet anytime via Pluto
             }
             
