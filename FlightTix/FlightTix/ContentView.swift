@@ -49,12 +49,11 @@ struct ContentView: View {
                     Task {
                         do {
                             let identus = try Identus(config: IdentusConfig())
-                            
-                            //try await identus.tearDown() // -- only needed to reset the state during dev
                             try await identus.start()
                             identus.startMessageStream()
                             
-                            if !identus.connectionExists(connectionId: "", label: "") {
+                            if try await !identus.connectionExists(connectionId: "",
+                                                                   label: IdentusConfig().connectionLabel) {
                                 do {
                                     let invitationFromCloudAgent = try await identus.createInvitation()
                                     guard let invitationFromCloudAgent else { return }

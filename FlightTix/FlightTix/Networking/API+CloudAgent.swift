@@ -45,6 +45,31 @@ extension APIClient {
                 throw error
             }
         }
+        
+        func getConnections() async throws -> ConnectionResponse? {
+            
+            let url = URL(string: "\(baseURL)/connections")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                
+                print("reponse is \(response)")
+                
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                
+                let decoder = JSONDecoder()
+                let decodedResponse =  try decoder.decode(ConnectionResponse.self, from: data)
+                
+                print("decoded reponse is \(decodedResponse)")
+                return decodedResponse
+            } catch {
+                throw error
+            }
+        }
     }
     
     var cloudAgent: CloudAgent {
