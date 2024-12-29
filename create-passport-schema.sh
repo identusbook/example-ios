@@ -2,7 +2,7 @@
 
 BASE_URL="http://localhost/cloud-agent/schema-registry/schemas"
 
-# --- Logging (Optional) ---
+# --- Logging ---
 LOG_FILE="schema_creation.log"
 
 # Function to log messages

@@ -5,7 +5,7 @@
 API_KEY="${API_KEY:-your-default-api-key}" # Replace with your default API key or set it as an environment variable.
 BASE_URL="http://localhost/cloud-agent/did-registrar/dids"
 
-# --- Logging (Optional) ---
+# --- Logging ---
 LOG_FILE="did_creation.log"
 
 # Function to log messages
