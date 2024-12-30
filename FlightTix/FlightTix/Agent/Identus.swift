@@ -12,6 +12,7 @@ import KeychainSwift
 
 final class Identus: ObservableObject {
     
+    // Exception Types
     final class SeedFailedToSaveToKeychainError: Error {}
     final class SeedKeychainKeyNotPresentError: Error {}
     final class SeedFailedToDeleteFromKeychainError: Error {}
@@ -21,22 +22,36 @@ final class Identus: ObservableObject {
     let mediatorDID: DID
     let seedKeychainKey: String
     let cloudAgentConnectionIdKeychainKey: String
+    let cloudAgentConnectionLabel: String
     let urlSessionConfig: URLSessionConfig
     
-    @Published var agentRunning = false
-    
-    //private var edgeAgent: EdgeAgent
+    // DIDComm Agent
     private var didCommAgent: DIDCommAgent?
+    
+    // Observable Properties
     @Published var status: String = ""
     @Published var error: String?
     
+    // Combine
     private var cancellables = Set<AnyCancellable>()
     
-    init(config: IdentusConfig) throws {
+    // Singleton Configuration
+    private static var config: IdentusConfig?
+    class func setup(_ config: IdentusConfig){
+        Identus.config = config
+    }
+    
+    // Singleton Init with Configuration
+    static var shared: Identus = Identus(config: IdentusConfig())
+    private init(config: IdentusConfig) {
+        
+        guard let config = Identus.config else { fatalError("Identus config not set. Must call Identus.setup(IdentusConfig()) before first use.") }
+        
         mediatorOOBURL = URL(string: config.mediatorOOBString)!
         mediatorDID = try! DID(string: config.mediatorDidString)
         seedKeychainKey = config.seedKeychainKey
         cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
+        cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
         urlSessionConfig = config.urlSessionConfig
     }
     
