@@ -49,7 +49,8 @@ final class FlightTixURLSession {
                     headers.merge(additionalHeaders, uniquingKeysWith: { (_, new) in new })
                 }
             case .development:
-                headers.removeValue(forKey: "apikey")
+                //headers.removeValue(forKey: "apikey")
+            print("Development Mode shouldn't need to remove APIKey \(headers)")
             
         }
         self.init(config: FlightTixSessionConfigStruct(httpAdditionalHeaders: headers))

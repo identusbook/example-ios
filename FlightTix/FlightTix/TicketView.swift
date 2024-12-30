@@ -27,6 +27,7 @@ struct TicketView: View {
                               traveller: Traveller(passport: Passport(name: "Jon Bauer",
                                                                       did: "123456789",
                                                                       passportNumber: "123456789",
-                                                                      dob: Date())
+                                                                      dob: Date(),
+                                                                      dateOfIssuance: Date())
                               )))
 }
