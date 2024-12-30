@@ -48,24 +48,24 @@ struct ContentView: View {
                     // Initialize Identus, if we fail to initialize, throw error
                     Task {
                         do {
-                            let identus = try Identus(config: IdentusConfig())
-                            //try await identus.tearDown()
-                            try await identus.start()
-                            identus.startMessageStream()
+                            Identus.setup(IdentusConfig()) // must call Identus.setup(IdentusConfig()) before first use
+                            //try await Identus.shared.tearDown()
+                            try await Identus.shared.start()
+                            Identus.shared.startMessageStream()
                             
-                            if try await !identus.connectionExists(connectionId: "",
-                                                                   label: IdentusConfig().cloudAgentConnectionLabel) {
+                            if try await !Identus.shared.connectionExists(connectionId: "",
+                                                                          label: Identus.shared.cloudAgentConnectionLabel) {
                                 do {
-                                    let invitationFromCloudAgent = try await identus.createInvitation()
+                                    let invitationFromCloudAgent = try await Identus.shared.createInvitation()
                                     guard let invitationFromCloudAgent else { return }
-                                    try await identus.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
+                                    try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
                                 } catch {
                                     print(error)
                                 }
                             }
-                            print(identus.status)
+                            print(Identus.shared.status)
                             
-                            if identus.status == "running" {
+                            if Identus.shared.status == "running" {
                                 print("we should transition from LoadingScreen to Content")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                                     viewState = .tabs
