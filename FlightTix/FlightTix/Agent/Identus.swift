@@ -16,6 +16,9 @@ final class Identus: ObservableObject {
     final class SeedFailedToSaveToKeychainError: Error {}
     final class SeedKeychainKeyNotPresentError: Error {}
     final class SeedFailedToDeleteFromKeychainError: Error {}
+    final class CredentialOfferRequestFailedError: Error {}
+    final class CredentialRecordResponseFailedError: Error {}
+    final class AcceptCredentialOfferFailedError: Error {}
     
     // Config
     let mediatorOOBURL: URL
@@ -175,6 +178,50 @@ final class Identus: ObservableObject {
         } catch {
             throw error
         }
+    }
+    
+    public func createCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            if let offer = try await networkActor.cloudAgent.createCredentialOffer(request: request) {
+                print("We created a credential offer!")
+                return offer
+            }
+        } catch {
+            throw error
+        }
+        throw CredentialOfferRequestFailedError()
+    }
+    
+    public func credentialRecord(recordId: String) async throws -> CredentialRecordResponse {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            if let record = try await networkActor.cloudAgent.credentialRecord(recordId: recordId) {
+                print("We found the credential offer record!")
+                return record
+            }
+        } catch {
+            throw error
+        }
+        throw CredentialRecordResponseFailedError()
+    }
+    
+    public func acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest) async throws -> CredentialRecordResponse {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            if let record = try await networkActor.cloudAgent.acceptCredentialOffer(recordId: recordId, request: request) {
+                print("We accepted the credential!")
+                return record
+            }
+        } catch {
+            throw error
+        }
+        throw AcceptCredentialOfferFailedError()
+    }
+    
+    public func listCredentials() async throws {
+        let credentials = self.didCommAgent?.edgeAgent.verifiableCredentials()
+        //return credentials ?? []
     }
     
     @MainActor

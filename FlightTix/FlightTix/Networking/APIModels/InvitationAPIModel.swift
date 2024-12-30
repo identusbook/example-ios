@@ -17,7 +17,7 @@ public struct CreateInvitationResponse: Decodable, Sendable {
     let invitation: InvitationAPIModel
 }
 
-struct InvitationAPIModel: Decodable, Sendable {
+struct InvitationAPIModel: Codable, Sendable {
     let from: String
     let id: String
     let invitationUrl: String
