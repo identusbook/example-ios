@@ -26,22 +26,38 @@ class RegisterViewModel: ObservableObject {
              The Holder can then retrieve the offer using the /issue-credentials/records endpoint and accept the offer using the /issue-credentials/records/{recordId}/accept-offer endpoint.
              The Issuer then uses the /issue-credentials/records/{recordId}/issue-credential endpoint to issue the credential, which gets sent to the Holder via DIDComm. The Holder receives the credential, and the protocol is complete.
              */
+            
+            
+            // Get Issuer ID
+            guard let currentIssuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
+                print("Issuer DID not found")
+                return
+            }
+            
+            // Get ConnectionId
+            guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else {
+                print("ConnectionID not found")
+                return
+            }
+            
+            return
             do {
                 let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
                                                                                                                            label: "FlightTixiOS-CloudAgent",
                                                                                                                            validityPeriod: 3600,
-                                                                                                                           schemaId: "http://localhost/cloud-agent/schema-registry/schemas/d7b2512f-5fc4-4069-b5e0-4a70a7a38273/schema",
+                                                                                                                           //schemaId: "http://localhost/cloud-agent/schema-registry/schemas/5314fb38-b9ba-3871-bba1-7146d31b790a",
                                                                                                                            //credentialDefinitionId: nil, // only for AnonCreds
                                                                                                                            credentialFormat: "JWT",
                                                                                                                            claims: PassportClaims(name: "Jon Bauer",
                                                                                                                                                   did: "1234567890",
-                                                                                                                                                  dateOfIssuance: Date(),
+                                                                                                                                                  dateOfIssuance: "2025-01-01T05:35:56.993032Z",
                                                                                                                                                   passportNumber: "987654322",
-                                                                                                                                                  dob: Date()),
+                                                                                                                                                  dob: "2025-01-01T05:35:56.993032Z"),
                                                                                                                            automaticIssuance: true,
-                                                                                                                           issuingDID: "did:prism:805d004cd8b8abecc9d048e962445e830d5e945fd747dfb2d813b543f3eb9f94",
+                                                                                                                           issuingDID: "did:prism:9a890776e5c2a5f5ebb41a0bdffe222d9ad31b1cb6449b7d7fe6a73c54b1c8a5",
                                                                                                                            //issuingKid: "kid1",
-                                                                                                                           connectionId: "f11d096a-7be4-4711-a8ec-6b5e0f5060c4",
+                                                                                                                           //connectionId: currentConnectionId.lowercased(),
+                                                                                                                           connectionId: "d9a9e0a3-fa55-4405-aef7-1ef04d77fa2b",
                                                                                                                            goalCode: "issue-vc",
                                                                                                                            goal: "To issue a Passport Verifiable Credential")
                 )
@@ -50,31 +66,61 @@ class RegisterViewModel: ObservableObject {
                 
                 // Get recordId
                 
-                let recordId = credentialOffer.recordId
+//                guard let recordId = credentialOffer.recordId else {
+//                    print("NO RECORD ID")
+//                    return
+//                }
                 
-                do {
-                    // look up credential offer http://localhost/cloud-agent/issue-credentials/records
-                    let credentialRecord = try await Identus.shared.credentialRecord(recordId: recordId)
-                    
-                    print("We should have found the Credential Offer in the list \(credentialOffer)")
+//                do {
+//                    // look up credential offer http://localhost/cloud-agent/issue-credentials/records
+//                    
+//                    let credentialRecord = try await Identus.shared.credentialRecord(recordId: credentialOffer.recordId)
+//                    
+//                    print("We should have found the Credential Offer in the list \(credentialOffer)")
+//                    
+//                    // At this point we need to Create our own DID and set ourselves as the subjectd of the offered credential
+//                    // It might seem intuitive to create our own DID on app init and there's nothing wrong with that, however
+//                    // as a learner, it might not be clear the differnce between a DID and a PeerDID.
+//                    // Maybe doing this here will help decern the differences.
+//                    guard let myNewDID = try await Identus.shared.createDID() else {
+//                        print("NO NEW DID")
+//                        return
+//                    }
+//                    
+//                    // get short form
+//                    let fullMethodId = myNewDID.methodId
+//                    let shortMethodId = fullMethodId.split(separator: ":").first!
+//                    let shortDID = "did:prism:\(shortMethodId)"
+//                    
+//                    // validate this DID
+//                    do {
+//                        let validatedDID = try Identus.shared.validateDID(shortForm: shortDID)
+//                    } catch {
+//                        print("Could not validate DID \(error)")
+//                    }
+                   
                     
                     // Holder Accepts offer: http://localhost/cloud-agent/issue-credentials/credential-offers/accept-invitation
                     
-                    do {
-                        let acceptedCredentialRecord = try await Identus.shared.acceptCredentialOffer(recordId: credentialRecord.recordId,
-                                                                                                      request: AcceptCredentialOfferRequest(subjectId: credentialRecord.myDid,
-                                                                                                                                            keyId: credentialRecord.myDid))
-                        print("We should have accepted the Credential Offer by this point \(credentialOffer)")
-                    } catch {
-                        print("Accepting the Credential offer failed \(error)")
-                    }
+//                    do {
+//                        // TODO: Where does Data come from?
+//                        //let acceptedCredential = try await Identus.shared.acceptOffer(did: myNewDID, type: "jwt", offerPayload: Data())
+//                        //let validatedDID = try Identus.shared.validateDID(shortForm: shortDID)
+//                        
+//                        let acceptedCredentialRecord = try await Identus.shared.acceptCredentialOffer(recordId: credentialRecord.recordId,
+//                                                                                                      request: AcceptCredentialOfferRequest(subjectId: myNewDID.string,
+//                                                                                                                                            keyId: myNewDID.string))
+//                        print("We should have accepted the Credential Offer by this point \(credentialOffer)")
+//                    } catch {
+//                        print("Accepting the Credential offer failed \(error)")
+//                    }
                     
                     // We can now list all Credentials in our wallet
-                    do {
-                        try await Identus.shared.listCredentials()
-                    } catch {
-                        print(error)
-                    }
+//                    do {
+//                        try await Identus.shared.listCredentials()
+//                    } catch {
+//                        print(error)
+//                    }
                     
                     
                 } catch {
@@ -84,10 +130,10 @@ class RegisterViewModel: ObservableObject {
                 
                 
                 
-            } catch {
-                print("CreateCredentialOffer failed with error: \(error)")
-                throw error
-            }
+//            } catch {
+//                print("CreateCredentialOffer failed with error: \(error)")
+//                throw error
+//            }
             
             
             //https://hyperledger.github.io/identus-docs/tutorials/credentials/issue

@@ -11,22 +11,22 @@ struct CredentialRecordResponse: Decodable {
     let recordId: String
     let thid: String
     let credentialFormat: String
-    let subjectId: String
-    let validityPeriod: String
+    //let subjectId: String
+    //let validityPeriod: String
     let claims: PassportClaims
     let automaticIssuance: Bool
-    let createdAt: Date
-    let updatedAt: Date
+    let createdAt: String
+    //let updatedAt: String
     let role: String
     let protocolState: String
-    let credential: String
-    let issuingDid: String
-    let goalCode: String
-    let goal: String
-    let myDid: String
-    let invitation: InvitationAPIModel
+    //let credential: String
+    //let issuingDid: String
+    //let goalCode: String
+    //let goal: String
+    //let myDid: String
+    //let invitation: InvitationAPIModel
     let metaRetries: Int
-    let metaLastFailure: CredentialOfferErrorResponseAPIModel
+    //let metaLastFailure: CredentialOfferErrorResponseAPIModel
 }
 
 struct AcceptCredentialOfferRequest: Encodable {

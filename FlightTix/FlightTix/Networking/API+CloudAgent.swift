@@ -75,6 +75,7 @@ extension APIClient {
             
             let createCredentialOfferBody = request
             let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
             guard let bodyData = try? encoder.encode(createCredentialOfferBody) else { return nil }
             
             let url = URL(string: "\(baseURL)/issue-credentials/credential-offers")!
@@ -148,6 +149,118 @@ extension APIClient {
                 
                 let decoder = JSONDecoder()
                 let decodedResponse =  try decoder.decode(ConnectionResponse.self, from: data)
+                
+                print("decoded reponse is \(decodedResponse)")
+                return decodedResponse
+            } catch {
+                throw error
+            }
+        }
+        
+        func createIssuerDID(request: CreateDIDRequest) async throws -> CreateDIDResponse? {
+            
+            let createDIDBody = request
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(createDIDBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/did-registrar/dids")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                
+                print("reponse is \(response)")
+                
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                
+                let decoder = JSONDecoder()
+                let decodedResponse = try decoder.decode(CreateDIDResponse.self, from: data)
+                
+                print("decoded reponse is \(decodedResponse)")
+                return decodedResponse
+            } catch {
+                throw error
+            }
+        }
+        
+        func didsOnCloudAgent() async throws -> DIDsOnCloudAgentResponse? {
+            
+            let url = URL(string: "\(baseURL)/did-registrar/dids")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                
+                print("reponse is \(response)")
+                
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                
+                let decoder = JSONDecoder()
+                let decodedResponse =  try decoder.decode(DIDsOnCloudAgentResponse.self, from: data)
+                
+                print("decoded reponse is \(decodedResponse)")
+                return decodedResponse
+            } catch {
+                throw error
+            }
+        }
+        
+        func didStatus(shortOrLongFormDID: String) async throws -> DIDStatusResponse? {
+            
+            let url = URL(string: "\(baseURL)/did-registrar/dids/\(shortOrLongFormDID)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                
+                print("reponse is \(response)")
+                
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                
+                let decoder = JSONDecoder()
+                let decodedResponse =  try decoder.decode(DIDStatusResponse.self, from: data)
+                
+                print("decoded reponse is \(decodedResponse)")
+                return decodedResponse
+            } catch {
+                throw error
+            }
+        }
+        
+        func requestDIDPublication(request: PublishDIDRequest) async throws -> PublishDIDResponse? {
+            
+            let publishDIDBody = request
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(publishDIDBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/did-registrar/dids/\(request.didRef)/publications")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                
+                print("reponse is \(response)")
+                
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                
+                let decoder = JSONDecoder()
+                let decodedResponse = try decoder.decode(PublishDIDResponse.self, from: data)
                 
                 print("decoded reponse is \(decodedResponse)")
                 return decodedResponse
