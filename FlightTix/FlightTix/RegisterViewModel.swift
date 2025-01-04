@@ -27,12 +27,11 @@ class RegisterViewModel: ObservableObject {
              The Issuer then uses the /issue-credentials/records/{recordId}/issue-credential endpoint to issue the credential, which gets sent to the Holder via DIDComm. The Holder receives the credential, and the protocol is complete.
              */
             
+            guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else { return }
             
-            // Get Issuer ID
-            guard let currentIssuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
-                print("Issuer DID not found")
-                return
-            }
+            guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else { return }
+            
+            guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else { return }
             
             // Get ConnectionId
             guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else {
@@ -40,13 +39,12 @@ class RegisterViewModel: ObservableObject {
                 return
             }
             
-            return
+            return // remove after connectionId is stored correctly
             do {
                 let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
                                                                                                                            label: "FlightTixiOS-CloudAgent",
                                                                                                                            validityPeriod: 3600,
                                                                                                                            //schemaId: "http://localhost/cloud-agent/schema-registry/schemas/5314fb38-b9ba-3871-bba1-7146d31b790a",
-                                                                                                                           //credentialDefinitionId: nil, // only for AnonCreds
                                                                                                                            credentialFormat: "JWT",
                                                                                                                            claims: PassportClaims(name: "Jon Bauer",
                                                                                                                                                   did: "1234567890",
@@ -54,7 +52,7 @@ class RegisterViewModel: ObservableObject {
                                                                                                                                                   passportNumber: "987654322",
                                                                                                                                                   dob: "2025-01-01T05:35:56.993032Z"),
                                                                                                                            automaticIssuance: true,
-                                                                                                                           issuingDID: "did:prism:9a890776e5c2a5f5ebb41a0bdffe222d9ad31b1cb6449b7d7fe6a73c54b1c8a5",
+                                                                                                                           issuingDID: shortFormIssuerDID.string,
                                                                                                                            //issuingKid: "kid1",
                                                                                                                            //connectionId: currentConnectionId.lowercased(),
                                                                                                                            connectionId: "d9a9e0a3-fa55-4405-aef7-1ef04d77fa2b",

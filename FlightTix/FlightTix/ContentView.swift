@@ -55,6 +55,10 @@ struct ContentView: View {
                             try await Identus.shared.startUpAndConnect()
                             print(Identus.shared.status)
                             
+                            if let issuerDID = Identus.shared.readIssuerDIDFromKeychain() {
+                                print("issuerDID: \(issuerDID)")
+                            }
+                            
                             if Identus.shared.status == "running" {
                                 print("we should transition from LoadingScreen to Content")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

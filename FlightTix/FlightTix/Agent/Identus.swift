@@ -207,11 +207,13 @@ final class Identus: ObservableObject {
             guard deleteSeedFromKeychain() else { throw SeedFailedToDeleteFromKeychainError() }
             print("Deleted Seed from Keychain")
             
+            guard deleteIssuerDIDFromKeychain() else { throw IssuerDIDFailedToDeleteFromKeychainError() }
+            print("Deleted IssuerDID from Keychain")
+            
             guard deleteConnectionIdFromKeychain() else { throw ConnectionFailedToDeleteFromKeychainError() }
             print("Deleted ConnectionId from Keychain")
             
-            guard deleteIssuerDIDFromKeychain() else { throw IssuerDIDFailedToDeleteFromKeychainError() }
-            print("Deleted IssuerDID from Keychain")
+            
             
             print("Identus has been torn down")
         } catch {
@@ -265,12 +267,14 @@ final class Identus: ObservableObject {
     
     public func storeIssuerDIDInKeychain(longFormDID: String) -> Bool {
         let keychain = KeychainSwift()
-        return keychain.set(longFormDID, forKey: cloudAgentIssuerDIDKeychainKey)
+        let encodedDID = longFormDID.encodeBase64()
+        return keychain.set(encodedDID, forKey: cloudAgentIssuerDIDKeychainKey)
     }
     
     public func readIssuerDIDFromKeychain() -> String? {
         let keychain = KeychainSwift()
-        return keychain.get(cloudAgentIssuerDIDKeychainKey)
+        guard let encodedIssuerDID = keychain.get(cloudAgentIssuerDIDKeychainKey), let decodedIssuerDID = encodedIssuerDID.decodeBase64() else { return nil }
+        return decodedIssuerDID
     }
     
     private func deleteIssuerDIDFromKeychain() -> Bool {
@@ -357,12 +361,25 @@ final class Identus: ObservableObject {
         return false
     }
     
-    public func verifyIssuerDIDIsPublished(shortFormDID: String) async throws -> Bool {
+    public func verifyIssuerDIDIsPublished(shortOrLongFormDID: String) async throws -> Bool {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            if let did = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: shortFormDID) {
+            if let did = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: shortOrLongFormDID) {
                 if did.status == "PUBLISHED" { return true }
                 return false
+            }
+        } catch {
+            throw error
+        }
+        throw CredentialOfferRequestFailedError()
+    }
+    
+    public func didShortForm(from longFormDID: String) async throws -> DID? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            if let did = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: longFormDID) {
+                return try DID(string: did.did)
+                return nil
             }
         } catch {
             throw error
