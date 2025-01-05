@@ -1,5 +1,5 @@
 //
-//  IsserCredentialCredentialOffer.swift
+//  IssuerCredentialCredentialOffer.swift
 //  FlightTix
 //
 //  Created by Jon Bauer on 12/29/24.
@@ -26,27 +26,7 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
     //let myDid: String?
     //let invitation: InvitationAPIModel
     let metaRetries: Int
-    //let metaLastFailure: CredentialOfferErrorResponseAPIModel
-    
-//    {
-//        "recordId": "bc0776c2-79d4-4f49-a4e4-a25ee9cd0311",
-//        "thid": "088b8507-2e68-4cd2-b31f-cae04b4a8c01",
-//        "credentialFormat": "JWT",
-//        "validityPeriod": 3600.0,
-//        "claims": {
-//            "name": "Jon Bauer",
-//            "passportNumber": "987654322",
-//            "did": "1234567890",
-//            "dateOfIssuance": 757365318.867171,
-//            "dob": 757365318.867171
-//        },
-//        "automaticIssuance": true,
-//        "createdAt": "2024-12-31T19:15:18.923633293Z",
-//        "role": "Issuer",
-//        "protocolState": "OfferPending",
-//        "metaRetries": 5
-//    }
-    
+    //let metaLastFailure: CredentialOfferErrorResponseAPIModel    
 }
 
 public struct CreateCredentialOfferRequest: Encodable, Sendable {
