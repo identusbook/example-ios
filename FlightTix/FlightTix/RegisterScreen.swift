@@ -32,7 +32,8 @@ struct RegisterScreen: View {
             try await model.register(passport: Passport(name: name,
                                                         did: "123456789",
                                                         passportNumber: passportNumber,
-                                                        dob: Date()))
+                                                        dob: Date(),
+                                                        dateOfIssuance: Date()))
         } catch {
             throw error
         }

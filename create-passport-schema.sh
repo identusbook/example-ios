@@ -18,7 +18,7 @@ RESPONSE=$(curl --silent --show-error --fail --location --request POST "$BASE_UR
   "version": "1.0.0",
   "description": "Passport Schema",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
-  "author": "did:prism:805d004cd8b8abecc9d048e962445e830d5e945fd747dfb2d813b543f3eb9f94",
+  "author": "did:prism:6753a3bbb99823e1d265cff4a0f95d1331b2050d86e9413bd54a5d1d01cb9c39",
   "tags": [
     "passport",
     "schema"

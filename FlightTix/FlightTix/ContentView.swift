@@ -49,21 +49,15 @@ struct ContentView: View {
                     Task {
                         do {
                             Identus.setup(IdentusConfig()) // must call Identus.setup(IdentusConfig()) before first use
-                            //try await Identus.shared.tearDown()
-                            try await Identus.shared.start()
-                            Identus.shared.startMessageStream()
-                            
-                            if try await !Identus.shared.connectionExists(connectionId: "",
-                                                                          label: Identus.shared.cloudAgentConnectionLabel) {
-                                do {
-                                    let invitationFromCloudAgent = try await Identus.shared.createInvitation()
-                                    guard let invitationFromCloudAgent else { return }
-                                    try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
-                                } catch {
-                                    print(error)
-                                }
-                            }
+//                            try await Identus.shared.tearDown()
+//                            return
+
+                            try await Identus.shared.startUpAndConnect()
                             print(Identus.shared.status)
+                            
+                            if let issuerDID = Identus.shared.readIssuerDIDFromKeychain() {
+                                print("issuerDID: \(issuerDID)")
+                            }
                             
                             if Identus.shared.status == "running" {
                                 print("we should transition from LoadingScreen to Content")

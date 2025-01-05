@@ -25,13 +25,16 @@ RESPONSE=$(curl --silent --show-error --fail --location --request POST "$BASE_UR
       "publicKeys": [
         {
           "id": "auth-1",
-          "purpose": "authentication",
-          "curve": "secp256k1"
+          "purpose": "authentication"
+        },
+	{
+          "id": "issue-1",
+          "purpose": "assertionMethod"
         }
       ],
       "services": []
     }
-  }')
+  }') | jq
 
 # --- Error Handling ---
 if [ $? -ne 0 ]; then

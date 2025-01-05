@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TicketView: View {
     
+    @StateObject var model: TicketViewModel = TicketViewModel()
     let ticket: Ticket?
     
     var body: some View {
@@ -16,6 +17,15 @@ struct TicketView: View {
             VStack {
                 Text("Your Flight:")
                 Text(ticket?.flight.rawValue ?? "")
+                Button {
+                    Task {
+                        try await model.showCredentials()
+                    }
+                    
+                } label: {
+                    Text("List Tickets")
+                }
+
             }
         }
     }
@@ -27,6 +37,7 @@ struct TicketView: View {
                               traveller: Traveller(passport: Passport(name: "Jon Bauer",
                                                                       did: "123456789",
                                                                       passportNumber: "123456789",
-                                                                      dob: Date())
+                                                                      dob: Date(),
+                                                                      dateOfIssuance: Date())
                               )))
 }
