@@ -30,7 +30,6 @@ struct RegisterScreen: View {
         
         do {
             try await model.register(passport: Passport(name: name,
-                                                        did: "123456789",
                                                         passportNumber: passportNumber,
                                                         dob: Date(),
                                                         dateOfIssuance: Date()))

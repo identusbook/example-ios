@@ -11,7 +11,7 @@ struct Passport {
     
     let id: UUID = UUID()
     let name: String
-    let did: String
+    let did: String?
     let passportNumber: String
     let dob: Date
     let dateOfIssuance: Date

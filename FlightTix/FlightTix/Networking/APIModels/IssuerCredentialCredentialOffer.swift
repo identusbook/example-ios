@@ -35,7 +35,7 @@ public struct CreateCredentialOfferRequest: Encodable, Sendable {
     //let schemaId: String
     //let credentialDefinitionId: String?
     let credentialFormat: String
-    let claims: PassportClaims
+    let claims: PassportClaimsRequest
     let automaticIssuance: Bool
     let issuingDID: String
     //let issuingKid: String
@@ -44,9 +44,8 @@ public struct CreateCredentialOfferRequest: Encodable, Sendable {
     let goal: String
 }
 
-struct PassportClaims: Codable, Sendable {
+struct PassportClaimsRequest: Codable, Sendable {
     let name: String
-    let did: String
     let dateOfIssuance: String
     let passportNumber: String
     let dob: String
