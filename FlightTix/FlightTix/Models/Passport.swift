@@ -14,6 +14,6 @@ struct Passport {
     let did: String?
     let passportNumber: String
     let dob: Date
-    let dateOfIssuance: Date
+    let dateOfIssuance: Date?
     
 }

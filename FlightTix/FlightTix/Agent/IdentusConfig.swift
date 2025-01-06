@@ -22,4 +22,6 @@ struct IdentusConfig {
     let cloudAgentConnectionLabel: String = "FlightTixiOS-CloudAgent"
     let cloudAgentConnectionIdKeychainKey: String = "CloudAgentConnectionId"
     let cloudAgentIssuerDIDKeychainKey: String = "CloudAgentIssuerDID"
+    
+    let passportIssueVCGoalCodeKeychainKey: String = "IssuePassportVC"
 }

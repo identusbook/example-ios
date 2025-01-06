@@ -22,6 +22,7 @@ final class Identus: ObservableObject {
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
+    final class PassportVCGoalCodeFailedToDeleteFromKeychainError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -34,6 +35,7 @@ final class Identus: ObservableObject {
     let cloudAgentConnectionIdKeychainKey: String
     let cloudAgentConnectionLabel: String
     let cloudAgentIssuerDIDKeychainKey: String
+    let passportIssueVCGoalCodeKeychainKey: String
     let urlSessionConfig: URLSessionConfig
     
     // DIDComm Agent
@@ -63,7 +65,9 @@ final class Identus: ObservableObject {
         seedKeychainKey = config.seedKeychainKey
         cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
         cloudAgentIssuerDIDKeychainKey = config.cloudAgentIssuerDIDKeychainKey
+        passportIssueVCGoalCodeKeychainKey = config.passportIssueVCGoalCodeKeychainKey
         cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
+        
         urlSessionConfig = config.urlSessionConfig
     }
     
@@ -204,17 +208,24 @@ final class Identus: ObservableObject {
         do {
             try await didCommAgent?.stop()
             print("DidcommAgent stopped")
-            
+
             guard deleteSeedFromKeychain() else { throw SeedFailedToDeleteFromKeychainError() }
             print("Deleted Seed from Keychain")
             
-            guard deleteIssuerDIDFromKeychain() else { throw IssuerDIDFailedToDeleteFromKeychainError() }
-            print("Deleted IssuerDID from Keychain")
+            if readIssuerDIDFromKeychain() != nil {
+                guard deleteIssuerDIDFromKeychain() else { throw IssuerDIDFailedToDeleteFromKeychainError() }
+                print("Deleted IssuerDID from Keychain")
+            }
             
-            guard deleteConnectionIdFromKeychain() else { throw ConnectionFailedToDeleteFromKeychainError() }
-            print("Deleted ConnectionId from Keychain")
+            if readConnectionIdFromKeychain() != nil {
+                guard deleteConnectionIdFromKeychain() else { throw ConnectionFailedToDeleteFromKeychainError() }
+                print("Deleted ConnectionId from Keychain")
+            }
             
-            
+            if readPassportVCGoalCodeFromKeychain() != nil {
+                guard deletePassportVCGoalCodeFromKeychain() else { throw PassportVCGoalCodeFailedToDeleteFromKeychainError() }
+                print("Deleted PassportVCGoalCode from Keychain")
+            }
             
             print("Identus has been torn down")
         } catch {
@@ -498,6 +509,21 @@ final class Identus: ObservableObject {
         }
     }
     
+    public func storePassportVCGoalCodeInKeychain(goalCode: String) -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.set(goalCode, forKey: passportIssueVCGoalCodeKeychainKey)
+    }
+    
+    public func readPassportVCGoalCodeFromKeychain() -> String? {
+        let keychain = KeychainSwift()
+        return keychain.get(passportIssueVCGoalCodeKeychainKey)
+    }
+    
+    private func deletePassportVCGoalCodeFromKeychain() -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.delete(passportIssueVCGoalCodeKeychainKey) ? true : false
+    }
+    
     @MainActor
     private func startMessageStream() {
         didCommAgent?.startFetchingMessages()
@@ -515,41 +541,7 @@ final class Identus: ObservableObject {
             else {
                 return
             }
-            
-//            Task.detached { [weak self] in
-//                do {
-//                    switch msgType {
-////                    case .didcommPresentation:
-////                        let presentation = try Presentation(fromMessage: message)
-////                    case .didcommRequestPresentation:
-////                        let credential = try await agent.edgeAgent.verifiableCredentials().map { $0.first }.first().await()
-////                        guard let credential else {
-////                            throw UnknownError.somethingWentWrongError()
-////                        }
-////                        let presentation = try await agent.createPresentationForRequestProof(
-////                            request: try RequestPresentation(fromMessage: message),
-////                            credential: credential
-////                        )
-////                        _ = try await agent.sendMessage(message: try presentation.makeMessage())
-//                    case .didcommOfferCredential, .didcommOfferCredential3_0:
-//                        guard let newPrismDID = try await self?.didCommAgent?.createNewPrismDID() else { return }
-//                        guard let requestCredential = try await self?.didCommAgent?.prepareRequestCredentialWithIssuer(
-//                            did: newPrismDID,
-//                            offer: try OfferCredential3_0(fromMessage: message)
-//                        ) else { throw UnknownError.somethingWentWrongError() }
-//                        _ = try await self?.didCommAgent?.sendMessage(message: try requestCredential.makeMessage())
-//                    case .didcommconnectionRequest:
-//                        let request = try ConnectionRequest(fromMessage: message)
-//                        let accept = ConnectionAccept(fromRequest: request)
-//                        _ = try await self?.didCommAgent?.sendMessage(message: try accept.makeMessage())
-//                    default:
-//                        break
-//                    }
-//                } catch let error as LocalizedError {
-//                    throw error
-//                }
-//            }
-            
+          
             Task {
                 switch msgType {
                 case .didcommBasicMessage:
@@ -586,43 +578,66 @@ final class Identus: ObservableObject {
 //                    print("Issue Credential: \(message)")
                     print("")
                 case .didcommIssueCredential3_0:
-//                    print("Issue Credential 3.0: \(message)")
-                    print("")
+                    print("Issue Credential 3.0: \(message)")
                     
-//                    let issueCredential = try IssueCredential3_0(fromMessage: message)
-//                    
-//                    Task { @MainActor in
-//                        do {
-//                            print("-------------------------------")
-//                            print("Attempting to process Credential")
-//                            print("-------------------------------")
-//                            let credential = try await self?.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
-//                            print("-------------------------------")
-//                            print("Processed Credential \(credential)")
-//                            print("-------------------------------")
-//                        } catch {
-//                            print("PROCESSING CREDENTIAL FAILED")
-//                        }
-//                    }
+                    let issueCredential = try IssueCredential3_0(fromMessage: message)
+                    
+                    // We only want to operate on actions we have matching goalCodes for
+                    print("IssueCredential3_0.body is: \(issueCredential.body)")
+                    
+                    // Passport VC Issuance
+                    guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
+                        return
+                    }
+                    if issueCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
+                        //Task { @MainActor in
+                            do {
+                                print("-------------------------------")
+                                print("Attempting to process Credential")
+                                print("-------------------------------")
+                                let credential = try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
+                                print("-------------------------------")
+                                print("Processed Credential \(String(describing: credential))")
+                                print("-------------------------------")
+                            } catch {
+                                print("PROCESSING CREDENTIAL FAILED")
+                            }
+                        //}
+                    }
 
-                    
-                    
-                    
                 case .didcommOfferCredential:
-                    print("Offer Credential: \(message)")
+//                    print("Offer Credential: \(message)")
+                    print("")
                 case .didcommOfferCredential3_0:
                     print("Offer Credential 3.0: \(message)")
                     
-//                    guard let newPrismDID = try await self?.didCommAgent?.createNewPrismDID() else {
-//                        print("Did not create new did")
-//                        return
-//                    }
-//                    guard let requestCredential = try await self?.didCommAgent?.prepareRequestCredentialWithIssuer(
-//                        did: newPrismDID,
-//                        offer: try OfferCredential3_0(fromMessage: message)
-//                    ) else { throw UnknownError.somethingWentWrongError() }
-//                    _ = try await self?.didCommAgent?.sendMessage(message: try requestCredential.makeMessage())
-//                    
+                    let offerCredential = try OfferCredential3_0(fromMessage: message)
+                    
+                    print("OfferCredential3.0.body is: \(offerCredential.body)")
+                    
+                    // Process Passport VC Credential
+                    guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
+                        return
+                    }
+                    if offerCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
+                        
+                        do {
+                            guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
+                                print("Did not create new did")
+                                return
+                            }
+                            guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
+                                did: newPrismDID,
+                                offer: try OfferCredential3_0(fromMessage: message)
+                            ) else { throw UnknownError.somethingWentWrongError() }
+                            let sentMessage = try await self.didCommAgent?.sendMessage(message: try requestCredential.makeMessage())
+                            print("Sent Message \(String(describing: sentMessage))")
+                            
+                        } catch {
+                            print(error)
+                        }
+                    }
+                    
                 case .didcommProposeCredential:
 //                    print("Propose Credential: \(message)")
                     print("")

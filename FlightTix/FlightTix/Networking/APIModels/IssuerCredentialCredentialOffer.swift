@@ -21,8 +21,8 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
     let protocolState: String
     //let credential: String?
     //let issuingDid: String?
-    //let goalCode: String?
-    //let goal: String?
+    let goalCode: String?
+    let goal: String?
     //let myDid: String?
     //let invitation: InvitationAPIModel
     let metaRetries: Int
@@ -30,7 +30,6 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
 }
 
 public struct CreateCredentialOfferRequest: Encodable, Sendable {
-    let label: String
     let validityPeriod: Int
     //let schemaId: String
     //let credentialDefinitionId: String?
