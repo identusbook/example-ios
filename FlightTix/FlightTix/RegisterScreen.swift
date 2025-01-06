@@ -15,12 +15,9 @@ struct RegisterScreen: View {
     
     @StateObject var model: RegisterViewModel = RegisterViewModel()
     
-    @State var showChoices: Bool = true
-    @State var showRegisterForm: Bool = false
-    
     @State private var name: String = ""
     @State private var passportNumber: String = ""
-    @State private var date = Date()
+    @State private var dob = Date()
     
     private func onRegisterSubmit() async throws {
         
@@ -30,10 +27,10 @@ struct RegisterScreen: View {
         
         do {
             try await model.register(passport: Passport(name: name,
-                                                        did: "123456789",
+                                                        did: nil,
                                                         passportNumber: passportNumber,
-                                                        dob: Date(),
-                                                        dateOfIssuance: Date()))
+                                                        dob: dob,
+                                                        dateOfIssuance: nil))
         } catch {
             throw error
         }
@@ -44,51 +41,29 @@ struct RegisterScreen: View {
     
     var body: some View {
         ZStack {
-            if showRegisterForm {
-                Form {
-                    Section("Passport Information") {
-                        TextField("Name", text: $name)
-                        TextField("Passport Number", text: $passportNumber)
-                        DatePicker(
-                            "Birthdate",
-                            selection: $date,
-                            displayedComponents: [.date]
-                        )
-                    }
-                    
-                    Section {
-                        Button {
-                            Task {
-                                try await onRegisterSubmit()
-                            }
-                        } label: {
-                            Text("Submit")
-                        }
-
-                    }
+            Form {
+                Section("Passport Information") {
+                    TextField("Name", text: $name)
+                    TextField("Passport Number", text: $passportNumber)
+                    DatePicker(
+                        "Birthdate",
+                        selection: $dob,
+                        displayedComponents: [.date]
+                    )
                 }
                 
-            }
-            
-            if showChoices {
-                VStack {
+                Section {
                     Button {
-                        showRegisterForm = true
-                        showChoices = false
+                        Task {
+                            try await onRegisterSubmit()
+                        }
                     } label: {
-                        Text("Create Account")
+                        Text("Submit")
                     }
+                    
                 }
             }
-            
         }
-        .onAppear {
-            //if !passportVCExists() {
-                showChoices = true
-                showRegisterForm = false
-            //}
-        }
-        
     }
 }
 

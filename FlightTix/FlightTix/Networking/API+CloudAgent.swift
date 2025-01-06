@@ -29,18 +29,10 @@ extension APIClient {
         
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse = try decoder.decode(CredentialRecordResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(CredentialRecordResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -54,18 +46,10 @@ extension APIClient {
           
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse =  try decoder.decode(CredentialRecordResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(CredentialRecordResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -85,18 +69,10 @@ extension APIClient {
         
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse = try decoder.decode(CreateCredentialOfferResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -115,18 +91,10 @@ extension APIClient {
         
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse = try decoder.decode(CreateInvitationResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(CreateInvitationResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -140,18 +108,10 @@ extension APIClient {
           
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse =  try decoder.decode(ConnectionResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(ConnectionResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -171,18 +131,10 @@ extension APIClient {
         
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse = try decoder.decode(CreateDIDResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(CreateDIDResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -196,18 +148,10 @@ extension APIClient {
           
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse =  try decoder.decode(DIDsOnCloudAgentResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(DIDsOnCloudAgentResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -221,18 +165,10 @@ extension APIClient {
           
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse =  try decoder.decode(DIDStatusResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(DIDStatusResponse.self, from: data)
             } catch {
                 throw error
             }
@@ -252,18 +188,10 @@ extension APIClient {
         
             do {
                 let response = try await api.handleRequest(request: request)
-                
-                print("reponse is \(response)")
-                
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                
-                let decoder = JSONDecoder()
-                let decodedResponse = try decoder.decode(PublishDIDResponse.self, from: data)
-                
-                print("decoded reponse is \(decodedResponse)")
-                return decodedResponse
+                return try JSONDecoder().decode(PublishDIDResponse.self, from: data)
             } catch {
                 throw error
             }

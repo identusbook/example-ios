@@ -13,7 +13,7 @@ struct CredentialRecordResponse: Decodable {
     let credentialFormat: String
     //let subjectId: String
     //let validityPeriod: String
-    let claims: PassportClaims
+    let claims: PassportClaimsRequest // Does not contain a DID
     let automaticIssuance: Bool
     let createdAt: String
     //let updatedAt: String

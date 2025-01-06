@@ -13,7 +13,7 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
     let credentialFormat: String
     //let subjectId: String?
     let validityPeriod: Double
-    let claims: PassportClaims
+    let claims: PassportClaimsRequest // Does not contain a DID
     let automaticIssuance: Bool
     let createdAt: String
     //let updatedAt: String
@@ -21,8 +21,8 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
     let protocolState: String
     //let credential: String?
     //let issuingDid: String?
-    //let goalCode: String?
-    //let goal: String?
+    let goalCode: String?
+    let goal: String?
     //let myDid: String?
     //let invitation: InvitationAPIModel
     let metaRetries: Int
@@ -30,12 +30,11 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
 }
 
 public struct CreateCredentialOfferRequest: Encodable, Sendable {
-    let label: String
     let validityPeriod: Int
     //let schemaId: String
     //let credentialDefinitionId: String?
     let credentialFormat: String
-    let claims: PassportClaims
+    let claims: PassportClaimsRequest
     let automaticIssuance: Bool
     let issuingDID: String
     //let issuingKid: String
@@ -44,9 +43,8 @@ public struct CreateCredentialOfferRequest: Encodable, Sendable {
     let goal: String
 }
 
-struct PassportClaims: Codable, Sendable {
+struct PassportClaimsRequest: Codable, Sendable {
     let name: String
-    let did: String
     let dateOfIssuance: String
     let passportNumber: String
     let dob: String
