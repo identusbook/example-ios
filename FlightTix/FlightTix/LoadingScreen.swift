@@ -20,8 +20,11 @@ struct LoadingScreen: View {
                     .aspectRatio(contentMode: .fit)
                     .scaledToFit()
                     .frame(width: 200)
+                    .padding(.bottom, 40)
+                ProgressView("Establishing a Connection...")
             }
             .padding()
+            
         }
         .edgesIgnoringSafeArea(.all)
     }

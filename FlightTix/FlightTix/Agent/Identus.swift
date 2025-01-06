@@ -96,12 +96,13 @@ final class Identus: ObservableObject {
         return nil
     }
     
-    public func acceptDIDCommInvite(invitationFromCloudAgent: OutOfBandInvitation) async throws {
+    public func acceptDIDCommInvite(invitationFromCloudAgent: OutOfBandInvitation) async throws -> OutOfBandInvitation? {
         
         do {
             print("Attempt to accept Cloud Agent Invitation")
             try await didCommAgent?.acceptDIDCommInvitation(invitation: invitationFromCloudAgent)
             print("we should have accepted the invitation")
+            return invitationFromCloudAgent // TODO: The invitationId should be the same as the new connectionId.  Not sure if we can rely on that but it seems to be true
 
         } catch let error as CommonError {
             switch error {
@@ -113,7 +114,7 @@ final class Identus: ObservableObject {
         } catch let error as LocalizedError {
             print("Error: \(String(describing: error.errorDescription))")
         }
-        
+        return nil
     }
     
     public func startUpAndConnect() async throws {
@@ -247,7 +248,19 @@ final class Identus: ObservableObject {
         do {
             let invitationFromCloudAgent = try await Identus.shared.createInvitation()
             guard let invitationFromCloudAgent else { return }
-            try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
+            // Here we have a invitationId which is the same as the connectionId, can we rely on that being the same?
+            let invitationIdToBeAccepted = invitationFromCloudAgent.id
+            let acceptedInvitation = try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
+            
+            guard let acceptedInvitationIdToBeStored = acceptedInvitation?.id else { return }
+            
+            if invitationIdToBeAccepted == acceptedInvitationIdToBeStored {
+                // Store as connectionId
+                if !self.storeConnectionIdInKeychain(connectionId: invitationIdToBeAccepted) {
+                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
+                }
+            }
+            
         } catch {
             print(error)
         }
@@ -537,33 +550,44 @@ final class Identus: ObservableObject {
 //                }
 //            }
             
-            Task.detached { [weak self] in
+            Task {
                 switch msgType {
                 case .didcommBasicMessage:
-                    print("Basic Message: \(message)")
+//                    print("Basic Message: \(message)")
+                    print("")
                 case .didcommMediationRequest:
-                    print("Mediation Request: \(message)")
+//                    print("Mediation Request: \(message)")
+                    print("")
                 case .didcommMediationGrant:
-                    print("Mediation Grant: \(message)")
+//                    print("Mediation Grant: \(message)")
+                    print("")
                 case .didcommMediationDeny:
-                    print("Mediation Deny: \(message)")
+//                    print("Mediation Deny: \(message)")
+                    print("")
                 case .didcommMediationKeysUpdate:
-                    print("Mediation Keys Update: \(message)")
+//                    print("Mediation Keys Update: \(message)")
+                    print("")
                 case .didcommPresentation:
-                    print("Presentation: \(message)")
+//                    print("Presentation: \(message)")
+                    print("")
                 case .didcommRequestPresentation:
-                    print("Request Presentation: \(message)")
+//                    print("Request Presentation: \(message)")
+                    print("")
                 case .didcommProposePresentation:
-                    print("Propose Presentation: \(message)")
+//                    print("Propose Presentation: \(message)")
+                    print("")
                 case .didcommCredentialPreview:
-                    print("Credential Preview: \(message)")
+//                    print("Credential Preview: \(message)")
+                    print("")
                 case .didcommCredentialPreview3_0:
-                    print("Credential Preview 3.0: \(message)")
+//                    print("Credential Preview 3.0: \(message)")
+                    print("")
                 case .didcommIssueCredential:
-                    print("Issue Credential: \(message)")
+//                    print("Issue Credential: \(message)")
+                    print("")
                 case .didcommIssueCredential3_0:
-                    print("Issue Credential 3.0: \(message)")
-                    
+//                    print("Issue Credential 3.0: \(message)")
+                    print("")
                     
 //                    let issueCredential = try IssueCredential3_0(fromMessage: message)
 //                    
@@ -600,44 +624,58 @@ final class Identus: ObservableObject {
 //                    _ = try await self?.didCommAgent?.sendMessage(message: try requestCredential.makeMessage())
 //                    
                 case .didcommProposeCredential:
-                    print("Propose Credential: \(message)")
+//                    print("Propose Credential: \(message)")
+                    print("")
                 case .didcommProposeCredential3_0:
-                    print("Propose Credential 3.0: \(message)")
+//                    print("Propose Credential 3.0: \(message)")
+                    print("")
                 case .didcommRequestCredential:
-                    print("Request Credential: \(message)")
+//                    print("Request Credential: \(message)")
+                    print("")
                 case .didcommRequestCredential3_0:
-                    print("Request Credential 3.0: \(message)")
+//                    print("Request Credential 3.0: \(message)")
+                    print("")
                 case .didcommconnectionRequest:
-                    print("Connection Request: \(message)")
+//                    print("Connection Request: \(message)")
+                    print("")
                 case .didcommconnectionResponse:
-                    print("Connection Response: \(message)")
+//                    print("Connection Response: \(message)")
+                    print("")
                     
-                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
-                        print("ConnectionAccept: \(connectionAccept)")
-                        // Store connectionId
-//                                            if let thid = connectionAccept.thid {
-//                                                if !self.storeConnectionIdInKeychain(connectionId: thid) {
-//                                                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
-//                                                }
-//                                            }
-                    }
+//                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
+//                        print("ConnectionAccept: \(connectionAccept)")
+//                        // Store connectionId
+////                                            if let thid = connectionAccept.thid {
+////                                                if !self.storeConnectionIdInKeychain(connectionId: thid) {
+////                                                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
+////                                                }
+////                                            }
+//                    }
                     
                 case .didcommRevocationNotification:
-                    print("Revocation Notification: \(message)")
+//                    print("Revocation Notification: \(message)")
+                    print("")
                 case .didcomminvitation:
-                    print("DIDComm Invitation: \(message)")
+//                    print("DIDComm Invitation: \(message)")
+                    print("")
                 case .didcommReportProblem:
-                    print("Report Problem: \(message)")
+//                    print("Report Problem: \(message)")
+                    print("")
                 case .prismOnboarding:
-                    print("PRISM Onboarding: \(message)")
+//                    print("PRISM Onboarding: \(message)")
+                    print("")
                 case .pickupRequest:
-                    print("Pickup Request: \(message)")
+//                    print("Pickup Request: \(message)")
+                    print("")
                 case .pickupDelivery:
-                    print("Pickup Delivery: \(message)")
+//                    print("Pickup Delivery: \(message)")
+                    print("")
                 case .pickupStatus:
-                    print("Pickup Status: \(message)")
+//                    print("Pickup Status: \(message)")
+                    print("")
                 case .pickupReceived:
-                    print("Pickup Received: \(message)")
+//                    print("Pickup Received: \(message)")
+                    print("")
                     //            default:
                     //                print("Unknown Message is: \(message)")
                 }

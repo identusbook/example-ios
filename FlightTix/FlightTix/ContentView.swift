@@ -52,6 +52,8 @@ struct ContentView: View {
 //                            try await Identus.shared.tearDown()
 //                            return
 
+                            
+                            
                             try await Identus.shared.startUpAndConnect()
                             print(Identus.shared.status)
                             
