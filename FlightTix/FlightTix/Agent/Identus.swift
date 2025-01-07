@@ -527,55 +527,48 @@ final class Identus: ObservableObject {
     @MainActor
     private func startMessageStream() {
         didCommAgent?.startFetchingMessages()
-        didCommAgent?.handleReceivedMessagesEvents().sink {
-            switch $0 {
-            case .finished:
-                print("Finished message retrieval")
-            case .failure(let error):
-                self.error = error.localizedDescription
-            }
-        } receiveValue: { message -> () in
+        didCommAgent?.handleReceivedMessagesEvents().flatMap { message -> AnyPublisher<Message, Error> in
             
-            guard message.direction == .received,
-                  let msgType = ProtocolTypes(rawValue: message.piuri)
-            else {
-                return
-            }
-          
-            Task {
+            Future(operation: {
+                guard message.direction == .received,
+                      let msgType = ProtocolTypes(rawValue: message.piuri)
+                else {
+                    return message
+                }
+                
                 switch msgType {
                 case .didcommBasicMessage:
-//                    print("Basic Message: \(message)")
+    //                    print("Basic Message: \(message)")
                     print("")
                 case .didcommMediationRequest:
-//                    print("Mediation Request: \(message)")
+    //                    print("Mediation Request: \(message)")
                     print("")
                 case .didcommMediationGrant:
-//                    print("Mediation Grant: \(message)")
+    //                    print("Mediation Grant: \(message)")
                     print("")
                 case .didcommMediationDeny:
-//                    print("Mediation Deny: \(message)")
+    //                    print("Mediation Deny: \(message)")
                     print("")
                 case .didcommMediationKeysUpdate:
-//                    print("Mediation Keys Update: \(message)")
+    //                    print("Mediation Keys Update: \(message)")
                     print("")
                 case .didcommPresentation:
-//                    print("Presentation: \(message)")
+    //                    print("Presentation: \(message)")
                     print("")
                 case .didcommRequestPresentation:
-//                    print("Request Presentation: \(message)")
+    //                    print("Request Presentation: \(message)")
                     print("")
                 case .didcommProposePresentation:
-//                    print("Propose Presentation: \(message)")
+    //                    print("Propose Presentation: \(message)")
                     print("")
                 case .didcommCredentialPreview:
-//                    print("Credential Preview: \(message)")
+    //                    print("Credential Preview: \(message)")
                     print("")
                 case .didcommCredentialPreview3_0:
-//                    print("Credential Preview 3.0: \(message)")
+    //                    print("Credential Preview 3.0: \(message)")
                     print("")
                 case .didcommIssueCredential:
-//                    print("Issue Credential: \(message)")
+    //                    print("Issue Credential: \(message)")
                     print("")
                 case .didcommIssueCredential3_0:
                     print("Issue Credential 3.0: \(message)")
@@ -587,9 +580,9 @@ final class Identus: ObservableObject {
                     
                     // Passport VC Issuance
                     guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
-                        return
+                        return message
                     }
-                    if issueCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
+    //                    if issueCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
                         //Task { @MainActor in
                             do {
                                 print("-------------------------------")
@@ -603,10 +596,10 @@ final class Identus: ObservableObject {
                                 print("PROCESSING CREDENTIAL FAILED")
                             }
                         //}
-                    }
+    //                    }
 
                 case .didcommOfferCredential:
-//                    print("Offer Credential: \(message)")
+    //                    print("Offer Credential: \(message)")
                     print("")
                 case .didcommOfferCredential3_0:
                     print("Offer Credential 3.0: \(message)")
@@ -617,14 +610,14 @@ final class Identus: ObservableObject {
                     
                     // Process Passport VC Credential
                     guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
-                        return
+                        return message
                     }
-                    if offerCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
+    //                    if offerCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
                         
                         do {
                             guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
                                 print("Did not create new did")
-                                return
+                                return message
                             }
                             guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
                                 did: newPrismDID,
@@ -636,70 +629,81 @@ final class Identus: ObservableObject {
                         } catch {
                             print(error)
                         }
-                    }
+    //                    }
                     
                 case .didcommProposeCredential:
-//                    print("Propose Credential: \(message)")
+    //                    print("Propose Credential: \(message)")
                     print("")
                 case .didcommProposeCredential3_0:
-//                    print("Propose Credential 3.0: \(message)")
+    //                    print("Propose Credential 3.0: \(message)")
                     print("")
                 case .didcommRequestCredential:
-//                    print("Request Credential: \(message)")
+    //                    print("Request Credential: \(message)")
                     print("")
                 case .didcommRequestCredential3_0:
-//                    print("Request Credential 3.0: \(message)")
+    //                    print("Request Credential 3.0: \(message)")
                     print("")
                 case .didcommconnectionRequest:
-//                    print("Connection Request: \(message)")
+    //                    print("Connection Request: \(message)")
                     print("")
                 case .didcommconnectionResponse:
-//                    print("Connection Response: \(message)")
+    //                    print("Connection Response: \(message)")
                     print("")
                     
-//                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
-//                        print("ConnectionAccept: \(connectionAccept)")
-//                        // Store connectionId
-////                                            if let thid = connectionAccept.thid {
-////                                                if !self.storeConnectionIdInKeychain(connectionId: thid) {
-////                                                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
-////                                                }
-////                                            }
-//                    }
+    //                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
+    //                        print("ConnectionAccept: \(connectionAccept)")
+    //                        // Store connectionId
+    ////                                            if let thid = connectionAccept.thid {
+    ////                                                if !self.storeConnectionIdInKeychain(connectionId: thid) {
+    ////                                                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
+    ////                                                }
+    ////                                            }
+    //                    }
                     
                 case .didcommRevocationNotification:
-//                    print("Revocation Notification: \(message)")
+    //                    print("Revocation Notification: \(message)")
                     print("")
                 case .didcomminvitation:
-//                    print("DIDComm Invitation: \(message)")
+    //                    print("DIDComm Invitation: \(message)")
                     print("")
                 case .didcommReportProblem:
-//                    print("Report Problem: \(message)")
+    //                    print("Report Problem: \(message)")
                     print("")
                 case .prismOnboarding:
-//                    print("PRISM Onboarding: \(message)")
+    //                    print("PRISM Onboarding: \(message)")
                     print("")
                 case .pickupRequest:
-//                    print("Pickup Request: \(message)")
+    //                    print("Pickup Request: \(message)")
                     print("")
                 case .pickupDelivery:
-//                    print("Pickup Delivery: \(message)")
+    //                    print("Pickup Delivery: \(message)")
                     print("")
                 case .pickupStatus:
-//                    print("Pickup Status: \(message)")
+    //                    print("Pickup Status: \(message)")
                     print("")
                 case .pickupReceived:
-//                    print("Pickup Received: \(message)")
+    //                    print("Pickup Received: \(message)")
                     print("")
                     //            default:
                     //                print("Unknown Message is: \(message)")
                 }
+                
+                return message
+                    
+            }).subscribe(on: DispatchQueue.main).eraseToAnyPublisher()
+             
+        }
+        .sink(receiveCompletion: {
+            switch $0 {
+            case .finished:
+                print("Finished message retrieval")
+            case .failure(let error):
+                self.error = error.localizedDescription
             }
-            print("\n-------------------------\n")
+        }, receiveValue: { message in
             
-            
-            
-            
+        })
+
             
 //            do {
 //                if let issued = try? IssueCredential(fromMessage: message) {
@@ -719,7 +723,7 @@ final class Identus: ObservableObject {
 //            } catch {
 //                print(error)
 //            }
-        }
+        //}
         .store(in: &cancellables)
     }
     
