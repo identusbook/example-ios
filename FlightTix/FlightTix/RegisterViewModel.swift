@@ -34,12 +34,7 @@ class RegisterViewModel: ObservableObject {
             
             // Get ConnectionId
             guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else { return }
-            
-            // Create unique goalCode we can use to track the response over DIDComm
-            let uniqueGoalCode = "\(UUID().uuidString.lowercased())"
-            
-            guard Identus.shared.storePassportVCGoalCodeInKeychain(goalCode: uniqueGoalCode) else { return }
-            
+
             do {
                 let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
                     validityPeriod: 3600,
@@ -50,12 +45,13 @@ class RegisterViewModel: ObservableObject {
                                                   dob: passport.dob.iso8601String()),
                     automaticIssuance: true,
                     issuingDID: shortFormIssuerDID.string,
-                    connectionId: currentConnectionId,
-                    goalCode: uniqueGoalCode,
-                    goal: "To issue a Passport Verifiable Credential")
-                )
+                    connectionId: currentConnectionId
+                ))
                 print("We should have created a CreditentialOffer at this point \(String(describing: credentialOffer))")
                
+                // Store thid as identifier we can use to track the response from DIDComm
+                guard Identus.shared.storePassportVCThidInKeychain(thid: credentialOffer.thid) else { return }
+                
                 } catch {
                     print("Credential Record failed with error: \(error)")
                 }

@@ -21,8 +21,8 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
     let protocolState: String
     //let credential: String?
     //let issuingDid: String?
-    let goalCode: String?
-    let goal: String?
+    //let goalCode: String? // these are no longer supported
+    //let goal: String? // these are no longer supported
     //let myDid: String?
     //let invitation: InvitationAPIModel
     let metaRetries: Int
@@ -39,8 +39,8 @@ public struct CreateCredentialOfferRequest: Encodable, Sendable {
     let issuingDID: String
     //let issuingKid: String
     let connectionId: String
-    let goalCode: String
-    let goal: String
+//    let goalCode: String // Not supported
+//    let goal: String // Not supported
 }
 
 struct PassportClaimsRequest: Codable, Sendable {
