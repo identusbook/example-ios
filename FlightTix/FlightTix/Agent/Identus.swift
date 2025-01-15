@@ -22,7 +22,7 @@ final class Identus: ObservableObject {
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
-    final class PassportVCGoalCodeFailedToDeleteFromKeychainError: Error {}
+    final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -35,7 +35,7 @@ final class Identus: ObservableObject {
     let cloudAgentConnectionIdKeychainKey: String
     let cloudAgentConnectionLabel: String
     let cloudAgentIssuerDIDKeychainKey: String
-    let passportIssueVCGoalCodeKeychainKey: String
+    let passportIssueVCThidKeychainKey: String
     let urlSessionConfig: URLSessionConfig
     
     // DIDComm Agent
@@ -46,7 +46,8 @@ final class Identus: ObservableObject {
     @Published var error: String?
     
     // Combine
-    private var cancellables = Set<AnyCancellable>()
+    private var credentialCancellables = Set<AnyCancellable>()
+    private var messageCancellables = Set<AnyCancellable>()
     
     // Singleton Configuration
     private static var config: IdentusConfig?
@@ -65,7 +66,7 @@ final class Identus: ObservableObject {
         seedKeychainKey = config.seedKeychainKey
         cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
         cloudAgentIssuerDIDKeychainKey = config.cloudAgentIssuerDIDKeychainKey
-        passportIssueVCGoalCodeKeychainKey = config.passportIssueVCGoalCodeKeychainKey
+        passportIssueVCThidKeychainKey = config.passportIssueVCThidKeychainKey
         cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
         
         urlSessionConfig = config.urlSessionConfig
@@ -222,9 +223,9 @@ final class Identus: ObservableObject {
                 print("Deleted ConnectionId from Keychain")
             }
             
-            if readPassportVCGoalCodeFromKeychain() != nil {
-                guard deletePassportVCGoalCodeFromKeychain() else { throw PassportVCGoalCodeFailedToDeleteFromKeychainError() }
-                print("Deleted PassportVCGoalCode from Keychain")
+            if readPassportVCThidFromKeychain() != nil {
+                guard deletePassportVCThidFromKeychain() else { throw PassportVCThidFailedToDeleteFromKeychainError() }
+                print("Deleted PassportVCThid from Keychain")
             }
             
             print("Identus has been torn down")
@@ -449,8 +450,7 @@ final class Identus: ObservableObject {
         }
         throw AcceptCredentialOfferFailedError()
     }
-    
-    var credentialCancellables = Set<AnyCancellable>() // Store subscriptions to retain them
+
     public func listCredentials() async throws {
         
         
@@ -469,7 +469,7 @@ final class Identus: ObservableObject {
                 print("-------END LIST CREDENTIALS------------")
             }
         )
-        .store(in: &cancellables)
+        .store(in: &credentialCancellables)
         
         //return credentials ?? []
     }
@@ -509,19 +509,19 @@ final class Identus: ObservableObject {
         }
     }
     
-    public func storePassportVCGoalCodeInKeychain(goalCode: String) -> Bool {
+    public func storePassportVCThidInKeychain(thid: String) -> Bool {
         let keychain = KeychainSwift()
-        return keychain.set(goalCode, forKey: passportIssueVCGoalCodeKeychainKey)
+        return keychain.set(thid, forKey: passportIssueVCThidKeychainKey)
     }
     
-    public func readPassportVCGoalCodeFromKeychain() -> String? {
+    public func readPassportVCThidFromKeychain() -> String? {
         let keychain = KeychainSwift()
-        return keychain.get(passportIssueVCGoalCodeKeychainKey)
+        return keychain.get(passportIssueVCThidKeychainKey)
     }
     
-    private func deletePassportVCGoalCodeFromKeychain() -> Bool {
+    private func deletePassportVCThidFromKeychain() -> Bool {
         let keychain = KeychainSwift()
-        return keychain.delete(passportIssueVCGoalCodeKeychainKey) ? true : false
+        return keychain.delete(passportIssueVCThidKeychainKey) ? true : false
     }
     
     @MainActor
@@ -571,65 +571,75 @@ final class Identus: ObservableObject {
     //                    print("Issue Credential: \(message)")
                     print("")
                 case .didcommIssueCredential3_0:
-                    print("Issue Credential 3.0: \(message)")
+                    //print("Issue Credential 3.0: \(message)")
                     
                     let issueCredential = try IssueCredential3_0(fromMessage: message)
                     
-                    // We only want to operate on actions we have matching goalCodes for
-                    print("IssueCredential3_0.body is: \(issueCredential.body)")
+                    // We only want to operate on actions we have matching thids for
+                    //print("IssueCredential3_0.body is: \(issueCredential.body)")
                     
                     // Passport VC Issuance
-                    guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
+                    guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
                         return message
                     }
-    //                    if issueCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
-                        //Task { @MainActor in
+    //                    if issueCredential.body.thid == expectedThidForPassportVCIssuance {
+                        Task { @MainActor in
                             do {
                                 print("-------------------------------")
                                 print("Attempting to process Credential")
                                 print("-------------------------------")
                                 let credential = try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
                                 print("-------------------------------")
-                                print("Processed Credential \(String(describing: credential))")
+                                //print("Processed Credential)  \(String(describing: credential))")
+                                print("Processed Credential")
                                 print("-------------------------------")
                             } catch {
                                 print("PROCESSING CREDENTIAL FAILED")
                             }
-                        //}
+                        }
     //                    }
 
                 case .didcommOfferCredential:
     //                    print("Offer Credential: \(message)")
                     print("")
                 case .didcommOfferCredential3_0:
-                    print("Offer Credential 3.0: \(message)")
+//                    print("")
+//                    print("Offer Credential 3.0: \(message)")
                     
                     let offerCredential = try OfferCredential3_0(fromMessage: message)
                     
-                    print("OfferCredential3.0.body is: \(offerCredential.body)")
+//                    print("OfferCredential3.0.body is: \(offerCredential.body)")
                     
                     // Process Passport VC Credential
-                    guard let expectedGoalCodeForPassportVCIssuance = self.readPassportVCGoalCodeFromKeychain() else {
+                    guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
                         return message
                     }
-    //                    if offerCredential.body.goalCode == expectedGoalCodeForPassportVCIssuance {
+                    if offerCredential.thid == expectedThidForPassportVCIssuance {
                         
                         do {
                             guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
                                 print("Did not create new did")
                                 return message
                             }
+
                             guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
                                 did: newPrismDID,
-                                offer: try OfferCredential3_0(fromMessage: message)
-                            ) else { throw UnknownError.somethingWentWrongError() }
-                            let sentMessage = try await self.didCommAgent?.sendMessage(message: try requestCredential.makeMessage())
-                            print("Sent Message \(String(describing: sentMessage))")
+                                offer: offerCredential
+                            ) else {
+                                print("SOMETHING WENT WRONG DURING PREPARE REQUEST CREDENTIALWITHISSUER")
+                                throw UnknownError.somethingWentWrongError()
+                            }
                             
+                            let messageToSend = try requestCredential.makeMessage()
+                            
+                            Future { [weak self] in
+                                try await self?.didCommAgent?.sendMessage(message: messageToSend)
+                            }.eraseToAnyPublisher()
+                          
                         } catch {
                             print(error)
                         }
-    //                    }
+                    }
                     
                 case .didcommProposeCredential:
     //                    print("Propose Credential: \(message)")
@@ -690,19 +700,27 @@ final class Identus: ObservableObject {
                 
                 return message
                     
-            }).subscribe(on: DispatchQueue.main).eraseToAnyPublisher()
+            })
+            //.subscribe(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
              
         }
-        .sink(receiveCompletion: {
-            switch $0 {
-            case .finished:
-                print("Finished message retrieval")
-            case .failure(let error):
-                self.error = error.localizedDescription
+        .sink(
+            receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    print("Finished processing all items.")
+                case .failure(let error):
+                    print("Error occurred: \(error)")
+                }
+            },
+            receiveValue: { value in
+                //print("Combine sink receiveValue reached: \(value)")
+                print("Combine sink receiveValue reached")
+                
             }
-        }, receiveValue: { message in
-            
-        })
+        )
+        .store(in: &messageCancellables)
 
             
 //            do {
@@ -724,7 +742,7 @@ final class Identus: ObservableObject {
 //                print(error)
 //            }
         //}
-        .store(in: &cancellables)
+//        .store(in: &cancellables)
     }
     
     private func connectionExists(connectionId: String, label: String?) async throws -> Bool {

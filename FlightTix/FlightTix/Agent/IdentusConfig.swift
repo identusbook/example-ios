@@ -23,5 +23,5 @@ struct IdentusConfig {
     let cloudAgentConnectionIdKeychainKey: String = "CloudAgentConnectionId"
     let cloudAgentIssuerDIDKeychainKey: String = "CloudAgentIssuerDID"
     
-    let passportIssueVCGoalCodeKeychainKey: String = "IssuePassportVC"
+    let passportIssueVCThidKeychainKey: String = "IssuePassportVC"
 }
