@@ -537,52 +537,43 @@ final class Identus: ObservableObject {
                 }
                 
                 switch msgType {
-                case .didcommBasicMessage:
-    //                    print("Basic Message: \(message)")
+                case .didcommBasicMessage,
+                        .didcommMediationRequest,
+                        .didcommMediationGrant,
+                        .didcommMediationDeny,
+                        .didcommMediationKeysUpdate,
+                        .didcommPresentation,
+                        .didcommRequestPresentation,
+                        .didcommProposePresentation,
+                        .didcommCredentialPreview,
+                        .didcommCredentialPreview3_0,
+                        .didcommIssueCredential,
+                        .didcommProposeCredential,
+                        .didcommProposeCredential3_0,
+                        .didcommRequestCredential,
+                        .didcommRequestCredential3_0,
+                        .didcommconnectionRequest,
+                        .didcommRevocationNotification,
+                        .didcomminvitation,
+                        .didcommReportProblem,
+                        .prismOnboarding,
+                        .pickupRequest,
+                        .pickupDelivery,
+                        .pickupStatus,
+                        .pickupReceived,
+                        .didcommOfferCredential:
                     print("")
-                case .didcommMediationRequest:
-    //                    print("Mediation Request: \(message)")
-                    print("")
-                case .didcommMediationGrant:
-    //                    print("Mediation Grant: \(message)")
-                    print("")
-                case .didcommMediationDeny:
-    //                    print("Mediation Deny: \(message)")
-                    print("")
-                case .didcommMediationKeysUpdate:
-    //                    print("Mediation Keys Update: \(message)")
-                    print("")
-                case .didcommPresentation:
-    //                    print("Presentation: \(message)")
-                    print("")
-                case .didcommRequestPresentation:
-    //                    print("Request Presentation: \(message)")
-                    print("")
-                case .didcommProposePresentation:
-    //                    print("Propose Presentation: \(message)")
-                    print("")
-                case .didcommCredentialPreview:
-    //                    print("Credential Preview: \(message)")
-                    print("")
-                case .didcommCredentialPreview3_0:
-    //                    print("Credential Preview 3.0: \(message)")
-                    print("")
-                case .didcommIssueCredential:
-    //                    print("Issue Credential: \(message)")
-                    print("")
+                        
                 case .didcommIssueCredential3_0:
-                    //print("Issue Credential 3.0: \(message)")
-                    
                     let issueCredential = try IssueCredential3_0(fromMessage: message)
                     
                     // We only want to operate on actions we have matching thids for
-                    //print("IssueCredential3_0.body is: \(issueCredential.body)")
                     
                     // Passport VC Issuance
                     guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
                         return message
                     }
-    //                    if issueCredential.body.thid == expectedThidForPassportVCIssuance {
+                        if issueCredential.thid == expectedThidForPassportVCIssuance {
                         Task { @MainActor in
                             do {
                                 print("-------------------------------")
@@ -597,18 +588,11 @@ final class Identus: ObservableObject {
                                 print("PROCESSING CREDENTIAL FAILED")
                             }
                         }
-    //                    }
+                        }
 
-                case .didcommOfferCredential:
-    //                    print("Offer Credential: \(message)")
-                    print("")
+                
                 case .didcommOfferCredential3_0:
-//                    print("")
-//                    print("Offer Credential 3.0: \(message)")
-                    
                     let offerCredential = try OfferCredential3_0(fromMessage: message)
-                    
-//                    print("OfferCredential3.0.body is: \(offerCredential.body)")
                     
                     // Process Passport VC Credential
                     guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
@@ -645,24 +629,11 @@ final class Identus: ObservableObject {
                         }
                     }
                     
-                case .didcommProposeCredential:
-    //                    print("Propose Credential: \(message)")
-                    print("")
-                case .didcommProposeCredential3_0:
-    //                    print("Propose Credential 3.0: \(message)")
-                    print("")
-                case .didcommRequestCredential:
-    //                    print("Request Credential: \(message)")
-                    print("")
-                case .didcommRequestCredential3_0:
-    //                    print("Request Credential 3.0: \(message)")
-                    print("")
-                case .didcommconnectionRequest:
-    //                    print("Connection Request: \(message)")
-                    print("")
+                
                 case .didcommconnectionResponse:
-    //                    print("Connection Response: \(message)")
                     print("")
+    //                    print("Connection Response: \(message)")
+                    
                     
     //                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
     //                        print("ConnectionAccept: \(connectionAccept)")
@@ -673,33 +644,6 @@ final class Identus: ObservableObject {
     ////                                                }
     ////                                            }
     //                    }
-                    
-                case .didcommRevocationNotification:
-    //                    print("Revocation Notification: \(message)")
-                    print("")
-                case .didcomminvitation:
-    //                    print("DIDComm Invitation: \(message)")
-                    print("")
-                case .didcommReportProblem:
-    //                    print("Report Problem: \(message)")
-                    print("")
-                case .prismOnboarding:
-    //                    print("PRISM Onboarding: \(message)")
-                    print("")
-                case .pickupRequest:
-    //                    print("Pickup Request: \(message)")
-                    print("")
-                case .pickupDelivery:
-    //                    print("Pickup Delivery: \(message)")
-                    print("")
-                case .pickupStatus:
-    //                    print("Pickup Status: \(message)")
-                    print("")
-                case .pickupReceived:
-    //                    print("Pickup Received: \(message)")
-                    print("")
-                    //            default:
-                    //                print("Unknown Message is: \(message)")
                 }
                 
                 return message
