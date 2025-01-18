@@ -527,7 +527,7 @@ final class Identus: ObservableObject {
     @MainActor
     private func startMessageStream() {
         didCommAgent?.startFetchingMessages()
-        didCommAgent?.handleReceivedMessagesEvents().flatMap { message -> AnyPublisher<Message, Error> in
+        didCommAgent?.handleReceivedMessagesEvents().receive(on: DispatchQueue.main).flatMap { message -> AnyPublisher<Message, Error> in
             
             Future(operation: {
                 guard message.direction == .received,
@@ -632,9 +632,13 @@ final class Identus: ObservableObject {
                             
                             let messageToSend = try requestCredential.makeMessage()
                             
-                            Future { [weak self] in
-                                try await self?.didCommAgent?.sendMessage(message: messageToSend)
-                            }.eraseToAnyPublisher()
+                            Task { @MainActor in
+                                try await self.didCommAgent?.sendMessage(message: messageToSend)
+                            }
+                            
+//                            Future { [weak self] in
+//                                try await self?.didCommAgent?.sendMessage(message: messageToSend)
+//                            }.eraseToAnyPublisher()
                           
                         } catch {
                             print(error)
