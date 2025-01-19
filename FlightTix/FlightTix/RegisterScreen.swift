@@ -34,7 +34,7 @@ struct RegisterScreen: View {
         } catch {
             throw error
         }
-        
+
         // Dismiss LoginScreen
         dismiss()
     }

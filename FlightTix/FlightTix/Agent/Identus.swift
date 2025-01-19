@@ -474,6 +474,34 @@ final class Identus: ObservableObject {
         //return credentials ?? []
     }
     
+    private var credentialListCancellables = Set<AnyCancellable>()
+    func fetchCredentials() async throws -> [Credential] {
+        guard let sdkFunctionPublisher = didCommAgent?.edgeAgent.verifiableCredentials() else { return [] }
+        return try await fetchCredentials(using: sdkFunctionPublisher)
+    }
+    
+    func fetchCredentials(using publisher: AnyPublisher<[Credential], Error>) async throws -> [Credential] {
+        return try await withCheckedThrowingContinuation { continuation in
+            var isContinuationResumed = false
+            
+            publisher
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        print("finished fetching credentials")
+                        break
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }, receiveValue: { credentials in
+                    guard !isContinuationResumed else { return }
+                    isContinuationResumed = true
+                    continuation.resume(returning: credentials)
+                })
+                .store(in: &credentialListCancellables)
+        }
+    }
+    
     public func acceptOffer(did: DID, type: String, offerPayload: Data) async throws {
         do {
             try await self.didCommAgent?.edgeAgent.prepareRequestCredentialWithIssuer(did: did, type: type, offerPayload: offerPayload)

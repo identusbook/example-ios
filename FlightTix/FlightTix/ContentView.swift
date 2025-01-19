@@ -109,7 +109,7 @@ struct ContentView: View {
     
     @MainActor
     private func showRegisterScreenIfNoLoginVC() async {
-        if !Auth.shared.isLoggedIn() {
+        if await !Auth.shared.isLoggedIn() {
             showRegisterScreen = true
         }
     }

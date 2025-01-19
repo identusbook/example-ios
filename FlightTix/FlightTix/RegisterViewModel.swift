@@ -56,8 +56,6 @@ class RegisterViewModel: ObservableObject {
                     print("Credential Record failed with error: \(error)")
                 }
 
-            // if VC success, set login status
-            try await Auth.shared.login(passport: passport)
         } catch {
             print(error)
         }
