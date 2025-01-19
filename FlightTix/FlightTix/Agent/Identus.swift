@@ -21,6 +21,7 @@ final class Identus: ObservableObject {
     final class CredentialRecordResponseFailedError: Error {}
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
+    final class ShortFormOfDIDFromLongFormDIDFailedError: Error {}
     final class CreateSchemaError: Error {}
     final class SchemaIdFailedToSaveToKeychainError: Error {}
     final class PassportSchemaIdFailedToDeleteFromKeychainError: Error {}
@@ -240,6 +241,7 @@ final class Identus: ObservableObject {
             
             if readPassportSchemaIdFromKeychain() != nil {
                 guard deletePassportSchemaIdFromKeychain() else { throw PassportSchemaIdFailedToDeleteFromKeychainError() }
+                print("Deleted PassportSchemaId from Keychain")
             }
             
             print("Identus has been torn down")
@@ -422,12 +424,11 @@ final class Identus: ObservableObject {
         do {
             if let did = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: longFormDID) {
                 return try DID(string: did.did)
-                return nil
             }
         } catch {
             throw error
         }
-        throw CredentialOfferRequestFailedError()
+        throw ShortFormOfDIDFromLongFormDIDFailedError()
     }
     
     /// MARK - CREDENTIALS
@@ -640,6 +641,7 @@ final class Identus: ObservableObject {
 
                 
                 case .didcommOfferCredential3_0:
+                    print("Offer Credential Received")
                     let offerCredential = try OfferCredential3_0(fromMessage: message)
                     
                     // Process Passport VC Credential
@@ -810,12 +812,11 @@ final class Identus: ObservableObject {
                                                           type: "object",
                                                           properties: Properties(
                                                             name: PropertyDetails(type: "string", format: nil),
-                                                            did: PropertyDetails(type: "string", format: nil),
                                                             dateOfIssuance: PropertyDetails(type: "string", format: "date-time"),
                                                             passportNumber: PropertyDetails(type: "string", format: nil),
                                                             dob: PropertyDetails(type: "string", format: "date-time")
                                                           ),
-                                                          required: ["name", "did", "dateOfIssuance", "passportNumber", "dob"],
+                                                          required: ["name", "dateOfIssuance", "passportNumber", "dob"],
                                                           additionalProperties: true))
         
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))

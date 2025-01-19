@@ -40,7 +40,6 @@ struct Schema: Codable {
 
 struct Properties: Codable {
     let name: PropertyDetails
-    let did: PropertyDetails
     let dateOfIssuance: PropertyDetails
     let passportNumber: PropertyDetails
     let dob: PropertyDetails

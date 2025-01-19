@@ -32,7 +32,11 @@ actor APIClient {
     public func dataFromResponse(urlResponse: URLResponse, data: Data?) async throws -> Data? {
         guard let response = urlResponse as? HTTPURLResponse, (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 202) else {
             guard let response = urlResponse as? HTTPURLResponse, (response.statusCode == 400) else {
-                
+                    print("We got a 400")
+                guard let response = urlResponse as? HTTPURLResponse, (response.statusCode == 500) else {
+                    print("We got a 500")
+                    return nil
+                }
                 return nil
             }
             return nil

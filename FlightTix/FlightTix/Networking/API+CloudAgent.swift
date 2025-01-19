@@ -9,6 +9,8 @@ import Foundation
 
 extension APIClient {
     
+    final class CredentialOfferResponseDecodeError: Error {}
+    
     struct CloudAgent {
         
         var api: APIClient
@@ -72,7 +74,13 @@ extension APIClient {
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                return try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
+                do {
+                    let credentialOfferRresponse = try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
+                    return credentialOfferRresponse
+                } catch {
+                    throw CredentialOfferResponseDecodeError()
+                }
+                
             } catch {
                 throw error
             }
