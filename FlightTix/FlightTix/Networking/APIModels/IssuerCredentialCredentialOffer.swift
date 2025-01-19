@@ -31,7 +31,7 @@ public struct CreateCredentialOfferResponse: Decodable, Sendable {
 
 public struct CreateCredentialOfferRequest: Encodable, Sendable {
     let validityPeriod: Int
-    //let schemaId: String
+    let schemaId: String
     //let credentialDefinitionId: String?
     let credentialFormat: String
     let claims: PassportClaimsRequest

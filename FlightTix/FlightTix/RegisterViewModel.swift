@@ -28,16 +28,28 @@ class RegisterViewModel: ObservableObject {
              */
             
             // Get IssuerDID and verify it's been published.
-            guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else { return }
-            guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else { return }
-            guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else { return }
+            guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
+                return
+            }
+            guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
+                return
+            }
+            guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else { return
+            }
+            // Get Passport SchemaId
+            guard let passportSchemaId = Identus.shared.readPassportSchemaIdFromKeychain() else {
+                return
+            }
             
             // Get ConnectionId
-            guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else { return }
+            guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else {
+                return
+            }
 
             do {
                 let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
                     validityPeriod: 3600,
+                    schemaId: "http://localhost:8085/schema-registry/schemas/\(passportSchemaId)/schema", // TODO: make this baseURL dynamic.  it's very important to be THIS baseURL, Cloud Agent can't dereference it from Docker if's different.  This should only be this way for dev.  Prod needs a real live URL
                     credentialFormat: "JWT",
                     claims: PassportClaimsRequest(name: passport.name,
                                                   dateOfIssuance: Date.now.iso8601String(),

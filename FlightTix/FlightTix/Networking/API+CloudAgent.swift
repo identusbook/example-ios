@@ -9,6 +9,8 @@ import Foundation
 
 extension APIClient {
     
+    final class CredentialOfferResponseDecodeError: Error {}
+    
     struct CloudAgent {
         
         var api: APIClient
@@ -72,7 +74,13 @@ extension APIClient {
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                return try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
+                do {
+                    let credentialOfferRresponse = try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
+                    return credentialOfferRresponse
+                } catch {
+                    throw CredentialOfferResponseDecodeError()
+                }
+                
             } catch {
                 throw error
             }
@@ -192,6 +200,46 @@ extension APIClient {
                     return nil
                 }
                 return try JSONDecoder().decode(PublishDIDResponse.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func createSchema(schema: IdentusSchema) async throws -> IdentusSchema? {
+            
+            let createSchemaBody = schema
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(createSchemaBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(IdentusSchema.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func getSchemaByGuid(guid: String) async throws -> IdentusSchema? {
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(IdentusSchema.self, from: data)
             } catch {
                 throw error
             }
