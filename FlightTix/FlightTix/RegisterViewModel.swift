@@ -31,6 +31,8 @@ class RegisterViewModel: ObservableObject {
             guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else { return }
             guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else { return }
             guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else { return }
+            // Get Passport SchemaId
+            guard let passportSchemaId = Identus.shared.readPassportSchemaIdFromKeychain() else { return }
             
             // Get ConnectionId
             guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else { return }
@@ -38,6 +40,7 @@ class RegisterViewModel: ObservableObject {
             do {
                 let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
                     validityPeriod: 3600,
+                    schemaId: "http://localhost/cloud-agent/schema-registry/schemas/\(passportSchemaId)/schema",
                     credentialFormat: "JWT",
                     claims: PassportClaimsRequest(name: passport.name,
                                                   dateOfIssuance: Date.now.iso8601String(),

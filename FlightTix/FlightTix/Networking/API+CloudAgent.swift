@@ -219,6 +219,23 @@ extension APIClient {
                 throw error
             }
         }
+        
+        func getSchemaByGuid(guid: String) async throws -> IdentusSchema? {
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(IdentusSchema.self, from: data)
+            } catch {
+                throw error
+            }
+        }
     }
     
     var cloudAgent: CloudAgent {

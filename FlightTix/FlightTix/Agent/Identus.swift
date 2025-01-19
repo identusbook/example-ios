@@ -22,6 +22,8 @@ final class Identus: ObservableObject {
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
     final class CreateSchemaError: Error {}
+    final class SchemaIdFailedToSaveToKeychainError: Error {}
+    final class PassportSchemaIdFailedToDeleteFromKeychainError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
     final class IssuerDIDNotPublishedError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
@@ -39,6 +41,7 @@ final class Identus: ObservableObject {
     let cloudAgentIssuerDIDKeychainKey: String
     let passportIssueVCThidKeychainKey: String
     let passportSchemaId: String
+    let passportSchemaIdKeychainKey: String
     let urlSessionConfig: URLSessionConfig
     
     // DIDComm Agent
@@ -70,7 +73,8 @@ final class Identus: ObservableObject {
         cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
         cloudAgentIssuerDIDKeychainKey = config.cloudAgentIssuerDIDKeychainKey
         passportIssueVCThidKeychainKey = config.passportIssueVCThidKeychainKey
-        passportSchemaId = config.passportSchemaID
+        passportSchemaId = config.passportSchemaId
+        passportSchemaIdKeychainKey = config.passportSchemaIdKeychainKey
         cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
         
         urlSessionConfig = config.urlSessionConfig
@@ -111,7 +115,7 @@ final class Identus: ObservableObject {
             print("Attempt to accept Cloud Agent Invitation")
             try await didCommAgent?.acceptDIDCommInvitation(invitation: invitationFromCloudAgent)
             print("we should have accepted the invitation")
-            return invitationFromCloudAgent // TODO: The invitationId should be the same as the new connectionId.  Not sure if we can rely on that but it seems to be true
+            return invitationFromCloudAgent
 
         } catch let error as CommonError {
             switch error {
@@ -137,7 +141,7 @@ final class Identus: ObservableObject {
             // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
             // Publish Schemas and store SchemaIds for later reference
-            try await createPassportSchema()
+            try await createPassportSchemaIfNotExists()
         } catch {
             throw error
         }
@@ -232,6 +236,10 @@ final class Identus: ObservableObject {
             if readPassportVCThidFromKeychain() != nil {
                 guard deletePassportVCThidFromKeychain() else { throw PassportVCThidFailedToDeleteFromKeychainError() }
                 print("Deleted PassportVCThid from Keychain")
+            }
+            
+            if readPassportSchemaIdFromKeychain() != nil {
+                guard deletePassportSchemaIdFromKeychain() else { throw PassportSchemaIdFailedToDeleteFromKeychainError() }
             }
             
             print("Identus has been torn down")
@@ -746,10 +754,40 @@ final class Identus: ObservableObject {
     }
     
     /// MARK - SCHEMAS
-    private func createPassportSchema() async throws {
+
+    public func storePassportSchemaIdInKeychain(id: String) -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.set(id, forKey: passportSchemaIdKeychainKey)
+    }
+    
+    public func readPassportSchemaIdFromKeychain() -> String? {
+        let keychain = KeychainSwift()
+        guard let schemaId = keychain.get(passportSchemaIdKeychainKey) else { return nil }
+        return schemaId
+    }
+    
+    private func deletePassportSchemaIdFromKeychain() -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.delete(passportSchemaIdKeychainKey) ? true : false
+    }
+    
+    private func createPassportSchemaIfNotExists() async throws {
         
+        //TODO: Check to see if Passport Schema already exists on Cloud Agent
+        // Only if not, run this code
+        guard let savedPassportSchemaGuid = readPassportSchemaIdFromKeychain() else {
+            try await createPassportSchema()
+            return
+        }
+        guard let schemaExists = try await getSchemaByGuid(guid: savedPassportSchemaGuid) else {
+            try await createPassportSchema()
+            return
+        }
+    }
+    
+    private func createPassportSchema() async throws {
         //make sure we have published author did
-        guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
+        guard let issuerDID = readIssuerDIDFromKeychain() else {
             throw IssuerDIDKeychainKeyNotPresentError()
         }
         guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
@@ -759,7 +797,8 @@ final class Identus: ObservableObject {
 //            return
 //        }
         
-        let passportSchema = IdentusSchema(name: "passport",
+        let passportSchema = IdentusSchema(guid: nil,
+                                           name: "passport",
                                            version: "1.0.0",
                                            description: "Passport Schema",
                                            type: "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
@@ -782,10 +821,25 @@ final class Identus: ObservableObject {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
             let createdSchema = try await networkActor.cloudAgent.createSchema(schema: passportSchema)
-            print("Passport Schema Created with ID: \(String(describing: createdSchema?.schema.id))")
+            if let schemaId = createdSchema?.guid {
+                print("Passport Schema Created with ID: \(String(describing: schemaId))")
+                guard storePassportSchemaIdInKeychain(id: schemaId) else { throw SchemaIdFailedToSaveToKeychainError() }
+            }
+            
         } catch {
             throw error
         }
+    }
+    
+    private func getSchemaByGuid(guid: String) async throws -> IdentusSchema? {
+        
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let existingSchema = try await networkActor.cloudAgent.getSchemaByGuid(guid: guid) else { return nil }
+        } catch {
+            throw error
+        }
+        return nil
     }
 }
 

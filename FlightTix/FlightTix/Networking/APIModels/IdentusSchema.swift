@@ -8,6 +8,7 @@
 import Foundation
 
 struct IdentusSchema: Codable {
+    let guid: String?
     let name: String
     let version: String
     let description: String
