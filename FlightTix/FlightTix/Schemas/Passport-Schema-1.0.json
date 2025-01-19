@@ -17,9 +17,6 @@
             "name": {
                 "type": "string"
             },
-            "did": {
-                "type": "string"
-            },
             "dateOfIssuance": {
                 "type": "string",
                 "format": "date-time"
@@ -34,7 +31,6 @@
         },
         "required": [
             "name",
-            "did",
             "dateOfIssuance",
             "passportNumber",
             "dob"
