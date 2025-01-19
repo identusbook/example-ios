@@ -21,7 +21,9 @@ final class Identus: ObservableObject {
     final class CredentialRecordResponseFailedError: Error {}
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
+    final class CreateSchemaError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
+    final class IssuerDIDNotPublishedError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
@@ -36,6 +38,7 @@ final class Identus: ObservableObject {
     let cloudAgentConnectionLabel: String
     let cloudAgentIssuerDIDKeychainKey: String
     let passportIssueVCThidKeychainKey: String
+    let passportSchemaId: String
     let urlSessionConfig: URLSessionConfig
     
     // DIDComm Agent
@@ -67,6 +70,7 @@ final class Identus: ObservableObject {
         cloudAgentConnectionIdKeychainKey = config.cloudAgentConnectionIdKeychainKey
         cloudAgentIssuerDIDKeychainKey = config.cloudAgentIssuerDIDKeychainKey
         passportIssueVCThidKeychainKey = config.passportIssueVCThidKeychainKey
+        passportSchemaId = config.passportSchemaID
         cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
         
         urlSessionConfig = config.urlSessionConfig
@@ -130,8 +134,10 @@ final class Identus: ObservableObject {
             await startMessageStream()
             // Create a Connection to Cloud-Agent if it does not already exist
             try await createConnectionToCloudAgentIfNotExists()
-//            // Create Issuer DID on Cloud-Agent if it does not already exist
+            // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
+            // Publish Schemas and store SchemaIds for later reference
+            try await createPassportSchema()
         } catch {
             throw error
         }
@@ -234,7 +240,8 @@ final class Identus: ObservableObject {
         }
     }
     
-    /// - Create Conection to Cloud Agent
+    /// MARK - CONNECTIONS
+    
     /// If no connection exists between the EdgeAgent and the Cloud-Agent, create one
     private func createConnectionToCloudAgentIfNotExists() async throws {
         
@@ -277,6 +284,9 @@ final class Identus: ObservableObject {
             print(error)
         }
     }
+    
+    
+    /// MARK - DIDs
     
     public func getDIDsOnCloudAgent() async throws -> DIDsOnCloudAgentResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
@@ -396,7 +406,7 @@ final class Identus: ObservableObject {
         } catch {
             throw error
         }
-        throw CredentialOfferRequestFailedError()
+        throw IssuerDIDNotPublishedError()
     }
     
     public func didShortForm(from longFormDID: String) async throws -> DID? {
@@ -411,6 +421,8 @@ final class Identus: ObservableObject {
         }
         throw CredentialOfferRequestFailedError()
     }
+    
+    /// MARK - CREDENTIALS
     
     public func createCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
@@ -728,6 +740,49 @@ final class Identus: ObservableObject {
                 return false
             }
             return connections.contents.contains(where: { $0.connectionId == connectionId && $0.label == label })
+        } catch {
+            throw error
+        }
+    }
+    
+    /// MARK - SCHEMAS
+    private func createPassportSchema() async throws {
+        
+        //make sure we have published author did
+        guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
+            throw IssuerDIDKeychainKeyNotPresentError()
+        }
+        guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
+            return
+        }
+//        guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else {
+//            return
+//        }
+        
+        let passportSchema = IdentusSchema(name: "passport",
+                                           version: "1.0.0",
+                                           description: "Passport Schema",
+                                           type: "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+                                           author: shortFormIssuerDID.string,
+                                           tags: ["passport", "schema"],
+                                           schema: Schema(id: passportSchemaId,
+                                                          schema: "https://json-schema.org/draft/2020-12/schema",
+                                                          description: "Passport",
+                                                          type: "object",
+                                                          properties: Properties(
+                                                            name: PropertyDetails(type: "string", format: nil),
+                                                            did: PropertyDetails(type: "string", format: nil),
+                                                            dateOfIssuance: PropertyDetails(type: "string", format: "date-time"),
+                                                            passportNumber: PropertyDetails(type: "string", format: nil),
+                                                            dob: PropertyDetails(type: "string", format: "date-time")
+                                                          ),
+                                                          required: ["name", "did", "dateOfIssuance", "passportNumber", "dob"],
+                                                          additionalProperties: true))
+        
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            let createdSchema = try await networkActor.cloudAgent.createSchema(schema: passportSchema)
+            print("Passport Schema Created with ID: \(String(describing: createdSchema?.schema.id))")
         } catch {
             throw error
         }

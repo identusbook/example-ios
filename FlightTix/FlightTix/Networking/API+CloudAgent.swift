@@ -196,6 +196,29 @@ extension APIClient {
                 throw error
             }
         }
+        
+        func createSchema(schema: IdentusSchema) async throws -> IdentusSchema? {
+            
+            let createSchemaBody = schema
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(createSchemaBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(IdentusSchema.self, from: data)
+            } catch {
+                throw error
+            }
+        }
     }
     
     var cloudAgent: CloudAgent {

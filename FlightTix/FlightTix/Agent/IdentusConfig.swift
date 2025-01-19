@@ -24,4 +24,5 @@ struct IdentusConfig {
     let cloudAgentIssuerDIDKeychainKey: String = "CloudAgentIssuerDID"
     
     let passportIssueVCThidKeychainKey: String = "IssuePassportVC"
+    let passportSchemaID: String = "https://identusbook.com/flighttix-passport-1.0.0"
 }
