@@ -57,7 +57,7 @@ extension APIClient {
             }
         }
         
-        func createCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse? {
+        func createPassportCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse? {
             
             let createCredentialOfferBody = request
             let encoder = JSONEncoder()
@@ -76,6 +76,35 @@ extension APIClient {
                 }
                 do {
                     let credentialOfferRresponse = try JSONDecoder().decode(CreateCredentialOfferResponse.self, from: data)
+                    return credentialOfferRresponse
+                } catch {
+                    throw CredentialOfferResponseDecodeError()
+                }
+                
+            } catch {
+                throw error
+            }
+        }
+        
+        func createTicketCredentialOffer(request: CreateTicketCredentialOfferRequest) async throws -> CreateTicketCredentialOfferResponse? {
+            
+            let createCredentialOfferBody = request
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(createCredentialOfferBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/issue-credentials/credential-offers")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                do {
+                    let credentialOfferRresponse = try JSONDecoder().decode(CreateTicketCredentialOfferResponse.self, from: data)
                     return credentialOfferRresponse
                 } catch {
                     throw CredentialOfferResponseDecodeError()
@@ -205,7 +234,7 @@ extension APIClient {
             }
         }
         
-        func createSchema(schema: IdentusSchema) async throws -> IdentusSchema? {
+        func createPassportSchema(schema: PassportSchema) async throws -> PassportSchema? {
             
             let createSchemaBody = schema
             let encoder = JSONEncoder()
@@ -222,13 +251,36 @@ extension APIClient {
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                return try JSONDecoder().decode(IdentusSchema.self, from: data)
+                return try JSONDecoder().decode(PassportSchema.self, from: data)
             } catch {
                 throw error
             }
         }
         
-        func getSchemaByGuid(guid: String) async throws -> IdentusSchema? {
+        func createTicketSchema(schema: TicketSchema) async throws -> TicketSchema? {
+            
+            let createSchemaBody = schema
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(createSchemaBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(TicketSchema.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func getPassportSchemaByGuid(guid: String) async throws -> PassportSchema? {
             
             let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
             var request = URLRequest(url: url)
@@ -239,7 +291,24 @@ extension APIClient {
                 guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
                     return nil
                 }
-                return try JSONDecoder().decode(IdentusSchema.self, from: data)
+                return try JSONDecoder().decode(PassportSchema.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func getTicketSchemaByGuid(guid: String) async throws -> TicketSchema? {
+            
+            let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(TicketSchema.self, from: data)
             } catch {
                 throw error
             }
