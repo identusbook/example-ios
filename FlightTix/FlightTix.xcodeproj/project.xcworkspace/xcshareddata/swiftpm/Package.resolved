@@ -1,5 +1,5 @@
 {
-  "originHash" : "672854cdf80268bab7217a3bf6fd7a72119d31567da49a4a6136d53e4ab56a77",
+  "originHash" : "c83a5387ab483d004589d6e87393081f8853758d52103362067a867d38aa359c",
   "pins" : [
     {
       "identity" : "anoncreds-rs",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
       "state" : {
-        "revision" : "678d442c6f7828def400a70ae15968aef67ef52d",
-        "version" : "1.8.3"
+        "revision" : "729e01bc9b9dab466ac85f21fb9ee2bc1c61b258",
+        "version" : "1.8.4"
       }
     },
     {
@@ -89,15 +89,6 @@
       "state" : {
         "revision" : "6b331d9ea1432ada4c1124af95a671d0c38bd9e2",
         "version" : "1.4.2"
-      }
-    },
-    {
-      "identity" : "identus-edge-agent-sdk-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "git@github.com:hyperledger/identus-edge-agent-sdk-swift.git",
-      "state" : {
-        "revision" : "a7efde575f24d74209603831c9c8ad431cbed5be",
-        "version" : "7.0.0"
       }
     },
     {

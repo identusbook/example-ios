@@ -666,6 +666,7 @@ final class Identus: ObservableObject {
                             
                             let messageToSend = try requestCredential.makeMessage()
                             
+                            print("ABOUT TO SEND MESSAGE AFTER PREPARE CREDENTIAL WITH ISSUER")
                             Task { @MainActor in
                                 try await self.didCommAgent?.sendMessage(message: messageToSend)
                             }
