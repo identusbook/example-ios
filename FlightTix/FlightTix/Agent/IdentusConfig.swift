@@ -26,4 +26,7 @@ struct IdentusConfig {
     let passportIssueVCThidKeychainKey: String = "IssuePassportVC"
     let passportSchemaId: String = "https://identusbook.com/flighttix-passport-1.0.0"
     let passportSchemaIdKeychainKey: String = "PassportSchemaId"
+    let ticketSchemaId: String = "https://identusbook.com/flighttix-ticket-1.0.0"
+    let ticketSchemaIdKeychainKey: String = "TicketSchemaId"
+    let ticketIssueVCThidKeychainKey: String = "IssueTicketVC"
 }

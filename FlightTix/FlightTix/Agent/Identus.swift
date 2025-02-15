@@ -41,8 +41,11 @@ final class Identus: ObservableObject {
     let cloudAgentConnectionLabel: String
     let cloudAgentIssuerDIDKeychainKey: String
     let passportIssueVCThidKeychainKey: String
+    let ticketIssueVCThidKeychainKey: String
     let passportSchemaId: String
+    let ticketSchemaId: String
     let passportSchemaIdKeychainKey: String
+    let ticketSchemaIdKeychainKey: String
     let urlSessionConfig: URLSessionConfig
     
     // DIDComm Agent
@@ -76,6 +79,9 @@ final class Identus: ObservableObject {
         passportIssueVCThidKeychainKey = config.passportIssueVCThidKeychainKey
         passportSchemaId = config.passportSchemaId
         passportSchemaIdKeychainKey = config.passportSchemaIdKeychainKey
+        ticketSchemaIdKeychainKey = config.ticketSchemaIdKeychainKey
+        ticketSchemaId = config.ticketSchemaId
+        ticketIssueVCThidKeychainKey = config.ticketIssueVCThidKeychainKey
         cloudAgentConnectionLabel = config.cloudAgentConnectionLabel
         
         urlSessionConfig = config.urlSessionConfig
@@ -433,10 +439,11 @@ final class Identus: ObservableObject {
     
     /// MARK - CREDENTIALS
     
-    public func createCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse {
+    /// MARK - PASSPORT CREDENTIALS
+    public func createPassportCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            if let offer = try await networkActor.cloudAgent.createCredentialOffer(request: request) {
+            if let offer = try await networkActor.cloudAgent.createPassportCredentialOffer(request: request) {
                 print("We created a credential offer!")
                 return offer
             }
@@ -445,6 +452,20 @@ final class Identus: ObservableObject {
         }
         throw CredentialOfferRequestFailedError()
     }
+    /// MARK - TICKET CREDENTIALS
+    public func createTicketCredentialOffer(request: CreateTicketCredentialOfferRequest) async throws -> CreateTicketCredentialOfferResponse {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            if let offer = try await networkActor.cloudAgent.createTicketCredentialOffer(request: request) {
+                print("We created a credential offer!")
+                return offer
+            }
+        } catch {
+            throw error
+        }
+        throw CredentialOfferRequestFailedError()
+    }
+    
     
     public func credentialRecord(recordId: String) async throws -> CredentialRecordResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
@@ -565,10 +586,25 @@ final class Identus: ObservableObject {
     
     public func readPassportVCThidFromKeychain() -> String? {
         let keychain = KeychainSwift()
-        return keychain.get(passportIssueVCThidKeychainKey)
+        return keychain.get(ticketIssueVCThidKeychainKey)
     }
     
     private func deletePassportVCThidFromKeychain() -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.delete(passportIssueVCThidKeychainKey) ? true : false
+    }
+    
+    public func storeTicketVCThidInKeychain(thid: String) -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.set(thid, forKey: passportIssueVCThidKeychainKey)
+    }
+    
+    public func readTicketVCThidFromKeychain() -> String? {
+        let keychain = KeychainSwift()
+        return keychain.get(passportIssueVCThidKeychainKey)
+    }
+    
+    private func deleteTicketVCThidFromKeychain() -> Bool {
         let keychain = KeychainSwift()
         return keychain.delete(passportIssueVCThidKeychainKey) ? true : false
     }
@@ -757,6 +793,7 @@ final class Identus: ObservableObject {
     
     /// MARK - SCHEMAS
 
+    /// MARK - Passport Schema
     public func storePassportSchemaIdInKeychain(id: String) -> Bool {
         let keychain = KeychainSwift()
         return keychain.set(id, forKey: passportSchemaIdKeychainKey)
@@ -781,7 +818,7 @@ final class Identus: ObservableObject {
             try await createPassportSchema()
             return
         }
-        guard let schemaExists = try await getSchemaByGuid(guid: savedPassportSchemaGuid) else {
+        guard let schemaExists = try await getPassportSchemaByGuid(guid: savedPassportSchemaGuid) else {
             try await createPassportSchema()
             return
         }
@@ -799,18 +836,18 @@ final class Identus: ObservableObject {
 //            return
 //        }
         
-        let passportSchema = IdentusSchema(guid: nil,
+        let passportSchema = PassportSchema(guid: nil,
                                            name: "passport",
                                            version: "1.0.0",
                                            description: "Passport Schema",
                                            type: "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
                                            author: shortFormIssuerDID.string,
                                            tags: ["passport", "schema"],
-                                           schema: Schema(id: passportSchemaId,
+                                           schema: PassportSchemaData(id: passportSchemaId,
                                                           schema: "https://json-schema.org/draft/2020-12/schema",
                                                           description: "Passport",
                                                           type: "object",
-                                                          properties: Properties(
+                                                          properties: PassportProperties(
                                                             name: PropertyDetails(type: "string", format: nil),
                                                             dateOfIssuance: PropertyDetails(type: "string", format: "date-time"),
                                                             passportNumber: PropertyDetails(type: "string", format: nil),
@@ -821,7 +858,7 @@ final class Identus: ObservableObject {
         
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            let createdSchema = try await networkActor.cloudAgent.createSchema(schema: passportSchema)
+            let createdSchema = try await networkActor.cloudAgent.createPassportSchema(schema: passportSchema)
             if let schemaId = createdSchema?.guid {
                 print("Passport Schema Created with ID: \(String(describing: schemaId))")
                 guard storePassportSchemaIdInKeychain(id: schemaId) else { throw SchemaIdFailedToSaveToKeychainError() }
@@ -832,11 +869,97 @@ final class Identus: ObservableObject {
         }
     }
     
-    private func getSchemaByGuid(guid: String) async throws -> IdentusSchema? {
+    /// MARK - Ticket Schema
+    public func storeTicketSchemaIdInKeychain(id: String) -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.set(id, forKey: ticketSchemaIdKeychainKey)
+    }
+    
+    public func readTicketSchemaIdFromKeychain() -> String? {
+        let keychain = KeychainSwift()
+        guard let schemaId = keychain.get(ticketSchemaIdKeychainKey) else { return nil }
+        return schemaId
+    }
+    
+    private func deleteTicketSchemaIdFromKeychain() -> Bool {
+        let keychain = KeychainSwift()
+        return keychain.delete(ticketSchemaIdKeychainKey) ? true : false
+    }
+    
+    private func createTicketSchemaIfNotExists() async throws {
+        
+        //TODO: Check to see if Ticket Schema already exists on Cloud Agent
+        // Only if not, run this code
+        guard let savedTicketSchemaGuid = readTicketSchemaIdFromKeychain() else {
+            try await createTicketSchema()
+            return
+        }
+        guard let schemaExists = try await getTicketSchemaByGuid(guid: savedTicketSchemaGuid) else {
+            try await createTicketSchema()
+            return
+        }
+    }
+    
+    private func createTicketSchema() async throws {
+        //make sure we have published author did
+        guard let issuerDID = readIssuerDIDFromKeychain() else {
+            throw IssuerDIDKeychainKeyNotPresentError()
+        }
+        guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
+            return
+        }
+        //        guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else {
+        //            return
+        //        }
+        
+        let ticketSchema = TicketSchema(guid: nil,
+                                           name: "ticket",
+                                           version: "1.0.0",
+                                           description: "Ticket Schema",
+                                           type: "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+                                           author: shortFormIssuerDID.string,
+                                           tags: ["ticket", "schema"],
+                                        schema: TicketSchemaData(id: ticketSchemaId,
+                                                          schema: "https://json-schema.org/draft/2020-12/schema",
+                                                          description: "Ticket",
+                                                          type: "object",
+                                                          properties: TicketProperties(
+                                                            name: PropertyDetails(type: "string", format: nil),
+                                                            dateOfIssuance: PropertyDetails(type: "string", format: "date-time"),
+                                                            flight: PropertyDetails(type: "string", format: nil)
+                                                          ),
+                                                          required: ["name", "dateOfIssuance", "dob"],
+                                                          additionalProperties: true))
         
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            guard let existingSchema = try await networkActor.cloudAgent.getSchemaByGuid(guid: guid) else { return nil }
+            let createdSchema = try await networkActor.cloudAgent.createTicketSchema(schema: ticketSchema)
+            if let schemaId = createdSchema?.guid {
+                print("Ticket Schema Created with ID: \(String(describing: schemaId))")
+                guard storeTicketSchemaIdInKeychain(id: schemaId) else { throw SchemaIdFailedToSaveToKeychainError() }
+            }
+            
+        } catch {
+            throw error
+        }
+    }
+    
+    private func getPassportSchemaByGuid(guid: String) async throws -> PassportSchema? {
+        
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let existingSchema = try await networkActor.cloudAgent.getPassportSchemaByGuid(guid: guid) else { return nil }
+        } catch {
+            throw error
+        }
+        return nil
+    }
+    
+    private func getTicketSchemaByGuid(guid: String) async throws -> TicketSchema? {
+        
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let existingSchema = try await networkActor.cloudAgent.getTicketSchemaByGuid(guid: guid) else { return nil }
         } catch {
             throw error
         }
