@@ -17,7 +17,7 @@ protocol URLSessionConfig {
 }
 
 struct FlightTixSessionConfigStruct: URLSessionConfig  {
-    let baseURL = URL(string: "http://localhost/cloud-agent")!
+    let baseURL = URL(string: "http://cloud-agent:8085")!
     let apiKey = ""
     let networkServiceType: NSURLRequest.NetworkServiceType = .default
     var httpAdditionalHeaders: [String: String] = ["Accept": "application/json",

@@ -52,15 +52,15 @@ struct ContentView: View {
 //                            try await Identus.shared.tearDown()
 //                            return
 
-                            try await Identus.shared.startUpAndConnect()
-                            print(Identus.shared.status)
-                            
-                            if Identus.shared.status == "running" {
-                                print("we should transition from LoadingScreen to Content")
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                    viewState = .tabs
+                                try await Identus.shared.startUpAndConnect()
+                                print(Identus.shared.status)
+                                
+                                if Identus.shared.status == "running" {
+                                    print("we should transition from LoadingScreen to Content")
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        viewState = .tabs
+                                    }
                                 }
-                            }
                             
                         } catch {
                             throw error

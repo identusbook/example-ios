@@ -47,7 +47,7 @@ class RegisterViewModel: ObservableObject {
             }
 
             do {
-                let credentialOffer = try await Identus.shared.createCredentialOffer(request: CreateCredentialOfferRequest(
+                let credentialOffer = try await Identus.shared.createPassportCredentialOffer(request: CreateCredentialOfferRequest(
                     validityPeriod: 3600,
                     schemaId: "http://localhost:8085/schema-registry/schemas/\(passportSchemaId)/schema", // TODO: make this baseURL dynamic.  it's very important to be THIS baseURL, Cloud Agent can't dereference it from Docker if's different.  This should only be this way for dev.  Prod needs a real live URL
                     credentialFormat: "JWT",
