@@ -984,14 +984,24 @@ final class Identus: ObservableObject {
     
     /// Present Proof
     
-    public func getPresentations() async throws -> [PresentationsResponse]? {
+    public func getPresentations() async throws -> PresentationsResponse? {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
             guard let presentations = try await networkActor.cloudAgent.getPresentations() else { return nil }
+            return presentations
         } catch {
             throw error
         }
-        return nil
+    }
+    
+    public func getPresentation(presentationId: String) async throws -> PresentationResponseContent? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let presentation = try await networkActor.cloudAgent.getProofPresentationRecord(presentationId: presentationId) else { return nil }
+            return presentation
+        } catch {
+            throw error
+        }
     }
     
     public func createProofRequest() async throws {
