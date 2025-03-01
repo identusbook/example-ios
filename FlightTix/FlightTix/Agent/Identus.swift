@@ -141,10 +141,13 @@ final class Identus: ObservableObject {
         do {
             // Start DIDCommAgent
             try await start()
+            
             // Start receiving messages from Pluto
             await startMessageStream()
+            
             // Create a Connection to Cloud-Agent if it does not already exist
             try await createConnectionToCloudAgentIfNotExists()
+            
             // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
             // Publish Schemas and store SchemaIds for later reference
@@ -282,12 +285,16 @@ final class Identus: ObservableObject {
         // Ask Cloud-Agent to create an Invitation and accept it
         do {
             let invitationFromCloudAgent = try await Identus.shared.createInvitation()
-            guard let invitationFromCloudAgent else { return }
+            guard let invitationFromCloudAgent else {
+                return
+            }
             // Here we have a invitationId which is the same as the connectionId, can we rely on that being the same?
             let invitationIdToBeAccepted = invitationFromCloudAgent.id
             let acceptedInvitation = try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
             
-            guard let acceptedInvitationIdToBeStored = acceptedInvitation?.id else { return }
+            guard let acceptedInvitationIdToBeStored = acceptedInvitation?.id else {
+                return
+            }
             
             if invitationIdToBeAccepted == acceptedInvitationIdToBeStored {
                 // Store as connectionId
@@ -642,13 +649,20 @@ final class Identus: ObservableObject {
                         .didcomminvitation,
                         .didcommReportProblem,
                         .prismOnboarding,
-                        .pickupRequest,
-                        .pickupDelivery,
-                        .pickupStatus,
-                        .pickupReceived,
+//                        .pickupRequest,
+//                        .pickupDelivery,
+//                        
+//                        .pickupReceived,
                         .didcommOfferCredential:
                     print("")
-                        
+                case .pickupStatus:
+                    print(message)
+                case .pickupDelivery:
+                    print(message)
+                case .pickupReceived:
+                    print(message)
+                case .pickupRequest:
+                    print(message)
                 case .didcommIssueCredential3_0:
                     let issueCredential = try IssueCredential3_0(fromMessage: message)
                     

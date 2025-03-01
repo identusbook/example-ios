@@ -313,6 +313,87 @@ extension APIClient {
                 throw error
             }
         }
+        
+        // Verify
+        func getPresentations() async throws -> PresentationsResponse? {
+            
+            let url = URL(string: "\(baseURL)/present-proof/presentations")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(PresentationsResponse.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func getProofPresentationRecord(presentationId: String) async throws -> PresentationResponseContent? {
+            
+            let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(PresentationResponseContent.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func createProofPresentation(request: CreateProofPresentationRequest) async throws -> PresentationsResponse? {
+            
+            let requestBody = request
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(requestBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/present-proof/presentations")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(PresentationsResponse.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func acceptPresentationProof(presentationId: String, request: AcceptPresentationProofRequest) async throws -> PresentationsResponse? {
+            
+            let requestBody = request
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            guard let bodyData = try? encoder.encode(requestBody) else { return nil }
+            
+            let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "PATCH"
+            request.httpBody = bodyData
+        
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(PresentationsResponse.self, from: data)
+            } catch {
+                throw error
+            }
+        }
     }
     
     var cloudAgent: CloudAgent {
