@@ -8,7 +8,7 @@
 import Foundation
 
 public struct PresentationsResponse: Decodable {
-    let contents: PresentationResponseContent
+    let contents: [PresentationResponseContent]
     let `self`: String
     let kind: String
     let pageOf: Int

@@ -33,6 +33,8 @@ final class Identus: ObservableObject {
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
     final class IssuerDIDFailedToDeleteFromKeychainError: Error {}
     
+    final class ProofRequestNotCreatedError: Error {}
+    
     // Config
     let mediatorOOBURL: URL
     let mediatorDID: DID
@@ -979,6 +981,48 @@ final class Identus: ObservableObject {
         }
         return nil
     }
+    
+    /// Present Proof
+    
+    public func getPresentations() async throws -> [PresentationsResponse]? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let presentations = try await networkActor.cloudAgent.getPresentations() else { return nil }
+        } catch {
+            throw error
+        }
+        return nil
+    }
+    
+    public func createProofRequest() async throws {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        
+        guard let connectionId = readConnectionIdFromKeychain() else { return }
+        
+        let proofPresentationRequest = CreateProofPresentationRequest(goalCode: "",
+                                                                      goal: "",
+                                                                      connectionId: connectionId,
+                                                                      options: CreateProofPresentationRequest.Options(challenge: "", domain: ""),
+                                                                      proofs: [],
+                                                                      anoncredPresentationRequest: "",
+                                                                      presentationFormat: "",
+                                                                      claims: [:],
+                                                                      credentialFormat: "")
+        
+        do {
+            let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
+            
+            guard createdProofRequest?.contents.isEmpty ?? true else {
+                throw ProofRequestNotCreatedError()
+            }
+
+        } catch {
+            throw ProofRequestNotCreatedError()
+        }
+    }
+    
+    
+    /// Verifiable Credentials Verification
 }
 
 
