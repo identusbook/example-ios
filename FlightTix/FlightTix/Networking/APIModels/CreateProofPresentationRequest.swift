@@ -13,10 +13,10 @@ struct CreateProofPresentationRequest: Encodable {
     let connectionId: String
     let options: Options
     let proofs: [ProofRequestAux] // What is ProofRequestAux type?
-    let anoncredPresentationRequest: String
-    let presentationFormat: String
-    let claims: [String: String]
-    let credentialFormat: String
+    //let anoncredPresentationRequest: String
+    //let presentationFormat: String
+    //let claims: [String: String] for SD-JWT
+    //let credentialFormat: String for SD-JWT
     
     struct Options: Encodable {
         let challenge: String

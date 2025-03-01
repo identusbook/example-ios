@@ -1012,13 +1012,8 @@ final class Identus: ObservableObject {
         let proofPresentationRequest = CreateProofPresentationRequest(goalCode: "",
                                                                       goal: "",
                                                                       connectionId: connectionId,
-                                                                      options: CreateProofPresentationRequest.Options(challenge: "", domain: ""),
-                                                                      proofs: [],
-                                                                      anoncredPresentationRequest: "",
-                                                                      presentationFormat: "",
-                                                                      claims: [:],
-                                                                      credentialFormat: "")
-        
+                                                                      options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "https://identusbook.com"),
+                                                                      proofs: [])
         do {
             let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
             
