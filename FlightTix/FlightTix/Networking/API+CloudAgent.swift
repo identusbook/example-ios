@@ -57,6 +57,27 @@ extension APIClient {
             }
         }
         
+        func postWithoutEscapingSlashes<T,R>(url: URL, request: R) async throws -> T? where T:Decodable, R:Encodable {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+      
+            guard let bodyData = try? encoder.encode(request) else { return nil }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    throw DecodeError()
+                }
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch {
+                throw PostError()
+            }
+        }
+        
         func patch<T,R>(url: URL, request: R) async throws -> T? where T:Decodable, R:Encodable {
             let encoder = JSONEncoder()
             guard let bodyData = try? encoder.encode(request) else { return nil }
@@ -98,6 +119,11 @@ extension APIClient {
             return try await get(url: url)
         }
         
+        func acceptCredentialOfferWithGenerics(recordId: String, request: AcceptCredentialOfferRequest) async throws -> CredentialRecordResponse? {
+            let url = URL(string: "\(baseURL)/issue-credentials/records/\(recordId)/accept-offer")!
+            return try await post(url: url, request: request)
+        }
+        
         func acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest) async throws -> CredentialRecordResponse? {
             
             let acceptCredentialOfferBody = request
@@ -120,6 +146,11 @@ extension APIClient {
             }
         }
         
+        func credentialRecordWithGenerics(recordId: String) async throws -> CredentialRecordResponse? {
+            let url = URL(string: "\(baseURL)/issue-credentials/records/\(recordId)")!
+            return try await get(url: url)
+        }
+        
         func credentialRecord(recordId: String) async throws -> CredentialRecordResponse? {
             
             let url = URL(string: "\(baseURL)/issue-credentials/records/\(recordId)")!
@@ -135,6 +166,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func createPassportCredentialOfferWithGenerics(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse? {
+            let url = URL(string: "\(baseURL)/issue-credentials/credential-offers")!
+            return try await postWithoutEscapingSlashes(url: url, request: request)
         }
         
         func createPassportCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse? {
@@ -166,6 +202,11 @@ extension APIClient {
             }
         }
         
+        func createTicketCredentialOfferWithGenerics(request: CreateTicketCredentialOfferRequest) async throws -> CreateTicketCredentialOfferResponse? {
+            let url = URL(string: "\(baseURL)/issue-credentials/credential-offers")!
+            return try await postWithoutEscapingSlashes(url: url, request: request)
+        }
+    
         func createTicketCredentialOffer(request: CreateTicketCredentialOfferRequest) async throws -> CreateTicketCredentialOfferResponse? {
             
             let createCredentialOfferBody = request
@@ -193,6 +234,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func createInvitationWithGenerics(request: CreateInvitationRequest) async throws -> CreateInvitationResponse? {
+            let url = URL(string: "\(baseURL)/connections")!
+            return try await post(url: url, request: request)
         }
         
         func createInvitation() async throws -> CreateInvitationResponse? {
