@@ -11,11 +11,91 @@ extension APIClient {
     
     final class CredentialOfferResponseDecodeError: Error {}
     
+    final class DecodeError: Error {}
+    final class GetError: Error {}
+    final class PostError: Error {}
+    final class PatchError: Error {}
+    
     struct CloudAgent {
         
         var api: APIClient
         var baseURL: URL {
             api.baseURL
+        }
+        
+        func get<T>(url: URL) async throws -> T? where T:Decodable {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    throw DecodeError()
+                }
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch {
+                throw GetError()
+            }
+        }
+        
+        func post<T,R>(url: URL, request: R) async throws -> T? where T:Decodable, R:Encodable {
+            let encoder = JSONEncoder()
+            guard let bodyData = try? encoder.encode(request) else { return nil }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = bodyData
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    throw DecodeError()
+                }
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch {
+                throw PostError()
+            }
+        }
+        
+        func patch<T,R>(url: URL, request: R) async throws -> T? where T:Decodable, R:Encodable {
+            let encoder = JSONEncoder()
+            guard let bodyData = try? encoder.encode(request) else { return nil }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "PATCH"
+            request.httpBody = bodyData
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    throw DecodeError()
+                }
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch {
+                throw PatchError()
+            }
+        }
+        
+        func getConnections() async throws -> ConnectionResponse? {
+            
+            let url = URL(string: "\(baseURL)/connections")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+          
+            do {
+                let response = try await api.handleRequest(request: request)
+                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                    return nil
+                }
+                return try JSONDecoder().decode(ConnectionResponse.self, from: data)
+            } catch {
+                throw error
+            }
+        }
+        
+        func getConnectionsWithGeneric() async throws -> ConnectionResponse? {
+            let url = URL(string: "\(baseURL)/connections")!
+            return try await get(url: url)
         }
         
         func acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest) async throws -> CredentialRecordResponse? {
@@ -132,23 +212,6 @@ extension APIClient {
                     return nil
                 }
                 return try JSONDecoder().decode(CreateInvitationResponse.self, from: data)
-            } catch {
-                throw error
-            }
-        }
-        
-        func getConnections() async throws -> ConnectionResponse? {
-            
-            let url = URL(string: "\(baseURL)/connections")!
-            var request = URLRequest(url: url)
-            request.httpMethod = "GET"
-          
-            do {
-                let response = try await api.handleRequest(request: request)
-                guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
-                    return nil
-                }
-                return try JSONDecoder().decode(ConnectionResponse.self, from: data)
             } catch {
                 throw error
             }
