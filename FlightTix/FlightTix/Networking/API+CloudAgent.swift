@@ -263,6 +263,11 @@ extension APIClient {
             }
         }
         
+        func createIssuerDIDWithGenerics(request: CreateDIDRequest) async throws -> CreateDIDResponse? {
+            let url = URL(string: "\(baseURL)/did-registrar/dids")!
+            return try await post(url: url, request: request)
+        }
+        
         func createIssuerDID(request: CreateDIDRequest) async throws -> CreateDIDResponse? {
             
             let createDIDBody = request
@@ -286,6 +291,11 @@ extension APIClient {
             }
         }
         
+        func didsOnCloudAgentWithGenerics() async throws -> DIDsOnCloudAgentResponse? {
+            let url = URL(string: "\(baseURL)/did-registrar/dids")!
+            return try await get(url: url)
+        }
+        
         func didsOnCloudAgent() async throws -> DIDsOnCloudAgentResponse? {
             
             let url = URL(string: "\(baseURL)/did-registrar/dids")!
@@ -303,6 +313,11 @@ extension APIClient {
             }
         }
         
+        func didStatusWithGenerics(shortOrLongFormDID: String) async throws -> DIDStatusResponse? {
+            let url = URL(string: "\(baseURL)/did-registrar/dids/\(shortOrLongFormDID)")!
+            return try await get(url: url)
+        }
+        
         func didStatus(shortOrLongFormDID: String) async throws -> DIDStatusResponse? {
             
             let url = URL(string: "\(baseURL)/did-registrar/dids/\(shortOrLongFormDID)")!
@@ -318,6 +333,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func requestDIDPublicationWithGenerics(request: PublishDIDRequest) async throws -> PublishDIDResponse? {
+            let url = URL(string: "\(baseURL)/did-registrar/dids/\(request.didRef)/publications")!
+            return try await postWithoutEscapingSlashes(url: url, request: request)
         }
         
         func requestDIDPublication(request: PublishDIDRequest) async throws -> PublishDIDResponse? {
@@ -343,6 +363,11 @@ extension APIClient {
             }
         }
         
+        func createPassportSchemaWithGenerics(schema: PassportSchema) async throws -> PassportSchema? {
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            return try await postWithoutEscapingSlashes(url: url, request: schema)
+        }
+        
         func createPassportSchema(schema: PassportSchema) async throws -> PassportSchema? {
             
             let createSchemaBody = schema
@@ -364,6 +389,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func createTicketSchemaWithGenerics(schema: TicketSchema) async throws -> TicketSchema? {
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            return try await postWithoutEscapingSlashes(url: url, request: schema)
         }
         
         func createTicketSchema(schema: TicketSchema) async throws -> TicketSchema? {
@@ -389,6 +419,11 @@ extension APIClient {
             }
         }
         
+        func getPassportSchemaByGuidWithGenerics(guid: String) async throws -> PassportSchema? {
+            let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
+            return try await get(url: url)
+        }
+        
         func getPassportSchemaByGuid(guid: String) async throws -> PassportSchema? {
             
             let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
@@ -404,6 +439,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func getTicketSchemaByGuidWithGenerics(guid: String) async throws -> TicketSchema? {
+            let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
+            return try await get(url: url)
         }
         
         func getTicketSchemaByGuid(guid: String) async throws -> TicketSchema? {
@@ -424,6 +464,11 @@ extension APIClient {
         }
         
         // Present Proof
+        func getPresentationsWithGenerics() async throws -> PresentationsResponse? {
+            let url = URL(string: "\(baseURL)/present-proof/presentations")!
+            return try await get(url: url)
+        }
+        
         func getPresentations() async throws -> PresentationsResponse? {
             
             let url = URL(string: "\(baseURL)/present-proof/presentations")!
@@ -441,6 +486,11 @@ extension APIClient {
             }
         }
         
+        func getProofPresentationRecordWithGenerics(presentationId: String) async throws -> PresentationResponseContent? {
+            let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
+            return try await get(url: url)
+        }
+        
         func getProofPresentationRecord(presentationId: String) async throws -> PresentationResponseContent? {
             
             let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
@@ -456,6 +506,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func createProofPresentationWithGenerics(request: CreateProofPresentationRequest) async throws -> PresentationsResponse? {
+            let url = URL(string: "\(baseURL)/present-proof/presentations")!
+            return try await postWithoutEscapingSlashes(url: url, request: request)
         }
         
         func createProofPresentation(request: CreateProofPresentationRequest) async throws -> PresentationsResponse? {
@@ -479,6 +534,11 @@ extension APIClient {
             } catch {
                 throw error
             }
+        }
+        
+        func acceptPresentationProofWithGenerics(presentationId: String, request: AcceptPresentationProofRequest) async throws -> PresentationsResponse? {
+            let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
+            return try await patch(url: url, request: request)
         }
         
         func acceptPresentationProof(presentationId: String, request: AcceptPresentationProofRequest) async throws -> PresentationsResponse? {
@@ -505,6 +565,11 @@ extension APIClient {
         }
         
         // Verifiable Credentials Verification
+        func verifyCredentialWithGenerics(request: VerifyCredentialRequest) async throws -> VerifyCredentialResponse? {
+            let url = URL(string: "\(baseURL)/verification/credential")!
+            return try await postWithoutEscapingSlashes(url: url, request: request)
+        }
+        
         func verifyCredential(request: VerifyCredentialRequest) async throws -> VerifyCredentialResponse? {
             
             let requestBody = request
