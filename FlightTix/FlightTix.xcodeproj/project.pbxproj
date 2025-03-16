@@ -240,7 +240,7 @@
 			mainGroup = FCC0A7792CE00D3D00649302;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */,
+				FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */,
 				FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -649,9 +649,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */ = {
+		FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "git@github.com:hyperledger/identus-edge-agent-sdk-swift.git";
+			repositoryURL = "https://github.com/hyperledger-identus/sdk-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 7.0.0;
@@ -670,52 +670,52 @@
 /* Begin XCSwiftPackageProductDependency section */
 		FC3DE74A2CF7771A00D454D3 /* Apollo */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Apollo;
 		};
 		FC3DE74C2CF7771A00D454D3 /* Authenticate */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Authenticate;
 		};
 		FC3DE74E2CF7771A00D454D3 /* Builders */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Builders;
 		};
 		FC3DE7502CF7771A00D454D3 /* Castor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Castor;
 		};
 		FC3DE7522CF7771A00D454D3 /* Domain */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Domain;
 		};
 		FC3DE7542CF7771A00D454D3 /* EdgeAgent */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = EdgeAgent;
 		};
 		FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = EdgeAgentSDK;
 		};
 		FC3DE7582CF7771A00D454D3 /* Mercury */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Mercury;
 		};
 		FC3DE75A2CF7771A00D454D3 /* Pluto */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Pluto;
 		};
 		FC3DE75C2CF7771A00D454D3 /* Pollux */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "identus-edge-agent-sdk-swift" */;
+			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Pollux;
 		};
 		FC4D618E2D18CC1200CB2733 /* KeychainSwift */ = {
