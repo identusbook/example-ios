@@ -17,6 +17,7 @@ final class Identus: ObservableObject {
     final class SeedKeychainKeyNotPresentError: Error {}
     final class SeedFailedToDeleteFromKeychainError: Error {}
     final class ConnectionFailedToDeleteFromKeychainError: Error {}
+    final class ConnectionFailedToReadFromKeychainError: Error {}
     final class CredentialOfferRequestFailedError: Error {}
     final class CredentialRecordResponseFailedError: Error {}
     final class AcceptCredentialOfferFailedError: Error {}
@@ -28,6 +29,7 @@ final class Identus: ObservableObject {
     final class RequestIssuerDIDToBePublishedError: Error {}
     final class IssuerDIDNotPublishedError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
+    final class PresentationResponseInvalidError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -152,6 +154,7 @@ final class Identus: ObservableObject {
             
             // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
+            
             // Publish Schemas and store SchemaIds for later reference
             try await createPassportSchemaIfNotExists()
         } catch {
@@ -984,10 +987,12 @@ final class Identus: ObservableObject {
     
     /// Present Proof
     
-    public func getPresentations() async throws -> PresentationsResponse? {
+    public func getPresentations() async throws -> PresentationsResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            guard let presentations = try await networkActor.cloudAgent.getPresentations() else { return nil }
+            guard let presentations = try await networkActor.cloudAgent.getPresentations() else {
+                throw PresentationResponseInvalidError()
+            }
             return presentations
         } catch {
             throw error
@@ -1004,10 +1009,24 @@ final class Identus: ObservableObject {
         }
     }
     
-    public func createProofRequest() async throws {
+    public func updatePresentation(presentationId: String, request: UpdatePresentationProofRequest) async throws -> PresentationResponseContent {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            guard let presentation = try await networkActor.cloudAgent.updatePresentationProof(presentationId: presentationId, request: request) else {
+                throw PresentationResponseInvalidError()
+            }
+            return presentation
+        } catch {
+            throw error
+        }
+    }
+    
+    public func createProofRequest() async throws -> PresentationsResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         
-        guard let connectionId = readConnectionIdFromKeychain() else { return }
+        guard let connectionId = readConnectionIdFromKeychain() else {
+            throw ConnectionFailedToReadFromKeychainError()
+        }
         
         let proofPresentationRequest = CreateProofPresentationRequest(goalCode: "",
                                                                       goal: "",
@@ -1015,11 +1034,15 @@ final class Identus: ObservableObject {
                                                                       options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "https://identusbook.com"),
                                                                       proofs: [])
         do {
-            let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
-            
-            guard createdProofRequest?.contents.isEmpty ?? true else {
+            guard let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest) else {
                 throw ProofRequestNotCreatedError()
             }
+            
+            guard createdProofRequest.contents.isEmpty else {
+                throw ProofRequestNotCreatedError()
+            }
+            
+            return createdProofRequest
 
         } catch {
             throw ProofRequestNotCreatedError()

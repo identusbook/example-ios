@@ -11,14 +11,6 @@ class RegisterViewModel: ObservableObject {
     
     public func register(passport: Passport) async throws {
         do {
-            
-            print("Handle Registration / Login VC Issuance here")
-            
-            // Request Airline to Issue a Passport VC
-            // call identus.issueVC(type: .passport, data: passport)
-            // must have connection ID inside Identus()
-            // Wait for Issuance
-            
             /*
              The protocol consists of the following main parts:
              
@@ -40,7 +32,6 @@ class RegisterViewModel: ObservableObject {
             guard let passportSchemaId = Identus.shared.readPassportSchemaIdFromKeychain() else {
                 return
             }
-            
             // Get ConnectionId
             guard let currentConnectionId = Identus.shared.readConnectionIdFromKeychain() else {
                 return

@@ -7,13 +7,17 @@
 
 import Foundation
 
-public struct PresentationsResponse: Decodable {
+public struct PresentationsResponse: Sequence, Decodable {
     let contents: [PresentationResponseContent]
     let `self`: String
     let kind: String
     let pageOf: Int
     let next: String
     let previous: String
+    
+    public func makeIterator() -> IndexingIterator<[PresentationResponseContent]> {
+        return contents.makeIterator()
+    }
 }
 
 public struct PresentationResponseContent: Decodable {
