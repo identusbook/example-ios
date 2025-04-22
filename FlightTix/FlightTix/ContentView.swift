@@ -49,6 +49,7 @@ struct ContentView: View {
                     Task {
                         do {
                             Identus.setup(IdentusConfig()) // must call Identus.setup(IdentusConfig()) before first use
+                            // TODO: remember to wipe the Simulator to reset CoreDate because it only appends
 //                            try await Identus.shared.tearDown()
 //                            return
 
