@@ -19,6 +19,8 @@ struct RegisterScreen: View {
     @State private var passportNumber: String = ""
     @State private var dob = Date()
     
+    @FocusState private var isFieldFocused: Bool
+    
     private func onRegisterSubmit() async throws {
         
         guard name.count > 1, passportNumber.count > 1 else {
@@ -26,11 +28,15 @@ struct RegisterScreen: View {
         }
         
         do {
+            // Register: Create Passport VC
             try await model.register(passport: Passport(name: name,
                                                         did: nil,
                                                         passportNumber: passportNumber,
                                                         dob: dob,
                                                         dateOfIssuance: nil))
+            
+            // Verify: Request Proof of valid Passport VC
+            try await model.verifyCredential()
         } catch {
             throw error
         }
@@ -43,7 +49,7 @@ struct RegisterScreen: View {
         ZStack {
             Form {
                 Section("Passport Information") {
-                    TextField("Name", text: $name)
+                    TextField("Name", text: $name).focused($isFieldFocused)
                     TextField("Passport Number", text: $passportNumber)
                     DatePicker(
                         "Birthdate",
@@ -63,6 +69,9 @@ struct RegisterScreen: View {
                     
                 }
             }
+        }
+        .onAppear {
+            isFieldFocused = true
         }
     }
 }

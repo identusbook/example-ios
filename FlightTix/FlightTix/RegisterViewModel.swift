@@ -72,4 +72,17 @@ class RegisterViewModel: ObservableObject {
             print(error)
         }
     }
+    
+    public func verifyCredential() async throws {
+        
+        guard let passportSchemaId = Identus.shared.readPassportSchemaIdFromKeychain() else {
+            return
+        }
+        
+        do {
+            try await Identus.shared.createProofRequest(schemaId: passportSchemaId)
+        } catch {
+            print(error)
+        }
+    }
 }

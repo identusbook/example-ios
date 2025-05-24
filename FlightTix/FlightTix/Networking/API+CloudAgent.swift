@@ -102,7 +102,7 @@ extension APIClient {
        
         func createProofPresentation(request: CreateProofPresentationRequest) async throws -> PresentationsResponse? {
             let url = URL(string: "\(baseURL)/present-proof/presentations")!
-            return try await postWithoutEscapingSlashes(url: url, request: request)
+            return try await post(url: url, requestBody: request)
         }
        
         func acceptPresentationProof(presentationId: String, request: AcceptPresentationProofRequest) async throws -> PresentationsResponse? {

@@ -49,19 +49,19 @@ struct ContentView: View {
                     Task {
                         do {
                             Identus.setup(IdentusConfig()) // must call Identus.setup(IdentusConfig()) before first use
-                            // TODO: remember to wipe the Simulator to reset CoreDate because it only appends
+//                             TODO: remember to wipe the Simulator to reset CoreDate because it only appends
 //                            try await Identus.shared.tearDown()
 //                            return
-
-                                try await Identus.shared.startUpAndConnect()
-                                print(Identus.shared.status)
-                                
-                                if Identus.shared.status == "running" {
-                                    print("we should transition from LoadingScreen to Content")
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                        viewState = .tabs
-                                    }
+                            
+                            try await Identus.shared.startUpAndConnect()
+                            print(Identus.shared.status)
+                            
+                            if Identus.shared.status == "running" {
+                                print("we should transition from LoadingScreen to Content")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    viewState = .tabs
                                 }
+                            }
                             
                         } catch {
                             throw error

@@ -1004,17 +1004,19 @@ final class Identus: ObservableObject {
         }
     }
     
-    public func createProofRequest() async throws {
+    public func createProofRequest(schemaId: String) async throws {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         
         guard let connectionId = readConnectionIdFromKeychain() else { return }
-        
-        let proofPresentationRequest = CreateProofPresentationRequest(goalCode: "",
-                                                                      goal: "",
+
+        let proofPresentationRequest = CreateProofPresentationRequest(
+                                                                      //goalCode: "flighttix-proof-request",
+                                                                      //goal: "Request proof of credential",
                                                                       connectionId: connectionId,
                                                                       options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "https://identusbook.com"),
-                                                                      proofs: [])
+                                                                      proofs: [CreateProofPresentationRequest.ProofRequestAux(schemaId: "http://localhost:8085/schema-registry/schemas/\(schemaId)/schema", trustIssuers: nil)])
         do {
+            
             let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
             
             guard createdProofRequest?.contents.isEmpty ?? true else {
