@@ -625,7 +625,8 @@ final class Identus: ObservableObject {
         didCommAgent?.startFetchingMessages()
         didCommAgent?.handleReceivedMessagesEvents().receive(on: DispatchQueue.main).flatMap { message -> AnyPublisher<Message, Error> in
             
-            Future(operation: {
+            Future(
+                operation: {
                 guard message.direction == .received,
                       let msgType = ProtocolTypes(rawValue: message.piuri)
                 else {
@@ -658,18 +659,14 @@ final class Identus: ObservableObject {
                         .didcommOfferCredential:
                     print("")
                 case .didcommPresentation:
+                    // Used when passing Presentations between Edge Agents
                     print("DIDCOMM PRESENTATION MESSAGE RECEIVED")
                     print(message)
-                           
-                    // Is this just to throw an error if we don't get a well formed Presentation as a message?  Any other useful action to take here?
                     let presentation = try Presentation(fromMessage: message)
-                    
-                    //TODO:  Where is verifyPresentation() supposed to be called?
                     let verified = try await self.didCommAgent?.verifyPresentation(message: message)
                     
-                    print("verified is: \(verified)")
-                    
                 case .didcommRequestPresentation:
+                    // Used when receiving a Presentation request from a Verifier
                     print("DIDCOMM REQUEST PRESENTATION MESSAGE RECEIVED")
                     print(message)
                     
@@ -685,7 +682,10 @@ final class Identus: ObservableObject {
                         request: try RequestPresentation(fromMessage: message),
                         credential: credential
                     ) {
-                        _ = try await self.didCommAgent?.sendMessage(message: try presentation.makeMessage())
+                        
+                        if let sentMessage = try await self.didCommAgent?.sendMessage(message: try presentation.makeMessage()) {
+                            print("Signed Presentation sent. \(sentMessage)")
+                        }
                     }
 
                 case .didcommProposePresentation:
