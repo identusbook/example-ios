@@ -10,6 +10,8 @@ import SwiftUI
 struct RegisterScreen: View {
     
     final class RegisterFormIncompleteError: Error {}
+    final class RegisterFormRegisterError: Error {}
+    final class RegisterFormVerifyCredentialError: Error {}
     
     @Environment(\.dismiss) private var dismiss
     
@@ -34,15 +36,27 @@ struct RegisterScreen: View {
                                                         passportNumber: passportNumber,
                                                         dob: dob,
                                                         dateOfIssuance: nil))
-            
-            // Verify: Request Proof of valid Passport VC
-            try await model.verifyCredential()
         } catch {
-            throw error
+            print(error)
+            throw RegisterFormRegisterError()
         }
-
-        // Dismiss LoginScreen
-        dismiss()
+        
+        // Wait 60 seconds for for Credential dance before trying to verify
+        try await Task.sleep(nanoseconds: 60_000_000_000)
+        
+        do {
+            // Verify: Request Proof of valid Passport VC
+            let presentation = try await model.requestProof()
+            print("PRESENTATION REQUEST IS: \(presentation)")
+            
+            try await Task.sleep(nanoseconds: 30_000_000_000)
+            
+            // Dismiss LoginScreen after Proof flow is complete
+            dismiss()
+        } catch {
+            print(error)
+            throw RegisterFormVerifyCredentialError()
+        }
     }
     
     var body: some View {

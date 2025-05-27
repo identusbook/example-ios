@@ -28,6 +28,8 @@ final class Identus: ObservableObject {
     final class RequestIssuerDIDToBePublishedError: Error {}
     final class IssuerDIDNotPublishedError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
+    final class PassportFailedToReadFromKeychainError: Error {}
+    final class CredentialNotFoundError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -595,7 +597,7 @@ final class Identus: ObservableObject {
     
     public func readPassportVCThidFromKeychain() -> String? {
         let keychain = KeychainSwift()
-        return keychain.get(ticketIssueVCThidKeychainKey)
+        return keychain.get(passportIssueVCThidKeychainKey)
     }
     
     private func deletePassportVCThidFromKeychain() -> Bool {
@@ -636,9 +638,7 @@ final class Identus: ObservableObject {
                         .didcommMediationGrant,
                         .didcommMediationDeny,
                         .didcommMediationKeysUpdate,
-                        .didcommPresentation,
-                        .didcommRequestPresentation,
-                        .didcommProposePresentation,
+                        
                         .didcommCredentialPreview,
                         .didcommCredentialPreview3_0,
                         .didcommIssueCredential,
@@ -657,6 +657,41 @@ final class Identus: ObservableObject {
 //                        .pickupReceived,
                         .didcommOfferCredential:
                     print("")
+                case .didcommPresentation:
+                    print("DIDCOMM PRESENTATION MESSAGE RECEIVED")
+                    print(message)
+                           
+                    // Is this just to throw an error if we don't get a well formed Presentation as a message?  Any other useful action to take here?
+                    let presentation = try Presentation(fromMessage: message)
+                    
+                    //TODO:  Where is verifyPresentation() supposed to be called?
+                    let verified = try await self.didCommAgent?.verifyPresentation(message: message)
+                    
+                    print("verified is: \(verified)")
+                    
+                case .didcommRequestPresentation:
+                    print("DIDCOMM REQUEST PRESENTATION MESSAGE RECEIVED")
+                    print(message)
+                    
+                    let credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }.first().await()
+                    
+                    
+                    guard let credential else {
+                        print("Credential Not Found!")
+                        throw CredentialNotFoundError()
+                    }
+
+                    if let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
+                        request: try RequestPresentation(fromMessage: message),
+                        credential: credential
+                    ) {
+                        _ = try await self.didCommAgent?.sendMessage(message: try presentation.makeMessage())
+                    }
+
+                case .didcommProposePresentation:
+                    print("DIDCOMM PROPOSE PRESENTATION MESSAGE RECEIVED")
+                    print(message)
+                    
                 case .pickupStatus:
                     print(message)
                 case .pickupDelivery:
@@ -680,9 +715,8 @@ final class Identus: ObservableObject {
                                 print("-------------------------------")
                                 print("Attempting to process Credential")
                                 print("-------------------------------")
-                                let credential = try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
+                                _ = try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
                                 print("-------------------------------")
-                                //print("Processed Credential)  \(String(describing: credential))")
                                 print("Processed Credential")
                                 print("-------------------------------")
                             } catch {
@@ -986,12 +1020,23 @@ final class Identus: ObservableObject {
     
     public func getPresentations() async throws -> PresentationsResponse? {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
-        do {
-            guard let presentations = try await networkActor.cloudAgent.getPresentations() else { return nil }
+       // do {
+//            guard let presentations = try await networkActor.cloudAgent.getPresentations() else {
+//                return nil
+//            }
+            
+            let presentations = try await networkActor.cloudAgent.getPresentations()
+        //{
+            print(presentations)
+                
             return presentations
-        } catch {
-            throw error
-        }
+//            } else {
+//                print("Get Presentations failed to return expected type")
+//            }
+            //return nil
+//        } catch {
+//            throw error
+//        }
     }
     
     public func getPresentation(presentationId: String) async throws -> PresentationResponseContent? {
@@ -1004,26 +1049,23 @@ final class Identus: ObservableObject {
         }
     }
     
-    public func createProofRequest(schemaId: String) async throws {
+    public func createProofRequest(schemaId: String) async throws -> PresentationResponseContent? {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         
-        guard let connectionId = readConnectionIdFromKeychain() else { return }
+        guard let connectionId = readConnectionIdFromKeychain() else { return nil }
 
         let proofPresentationRequest = CreateProofPresentationRequest(
                                                                       //goalCode: "flighttix-proof-request",
                                                                       //goal: "Request proof of credential",
                                                                       connectionId: connectionId,
-                                                                      options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "https://identusbook.com"),
-                                                                      proofs: [CreateProofPresentationRequest.ProofRequestAux(schemaId: "http://localhost:8085/schema-registry/schemas/\(schemaId)/schema", trustIssuers: nil)])
+                                                                      options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "identusbook.com"),
+                                                                      proofs: [CreateProofPresentationRequest.ProofRequestAuxRequest(schemaId: "http://localhost:8085/schema-registry/schemas/\(schemaId)/schema", trustIssuers: ["some-issuer"])])
+        
         do {
-            
-            let createdProofRequest = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
-            
-            guard createdProofRequest?.contents.isEmpty ?? true else {
-                throw ProofRequestNotCreatedError()
-            }
-
+            let presentation = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
+            return presentation
         } catch {
+            print("CREATE PROOF REQUEST ERROR: \(error)")
             throw ProofRequestNotCreatedError()
         }
     }
