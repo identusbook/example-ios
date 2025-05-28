@@ -7,16 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FC3DE74B2CF7771A00D454D3 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74A2CF7771A00D454D3 /* Apollo */; };
-		FC3DE74D2CF7771A00D454D3 /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74C2CF7771A00D454D3 /* Authenticate */; };
-		FC3DE74F2CF7771A00D454D3 /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE74E2CF7771A00D454D3 /* Builders */; };
-		FC3DE7512CF7771A00D454D3 /* Castor in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7502CF7771A00D454D3 /* Castor */; };
-		FC3DE7532CF7771A00D454D3 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7522CF7771A00D454D3 /* Domain */; };
-		FC3DE7552CF7771A00D454D3 /* EdgeAgent in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7542CF7771A00D454D3 /* EdgeAgent */; };
-		FC3DE7572CF7771A00D454D3 /* EdgeAgentSDK in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */; };
-		FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE7582CF7771A00D454D3 /* Mercury */; };
-		FC3DE75B2CF7771A00D454D3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75A2CF7771A00D454D3 /* Pluto */; };
-		FC3DE75D2CF7771A00D454D3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = FC3DE75C2CF7771A00D454D3 /* Pollux */; };
+		DD6BF99D2DE61D5100DD47B3 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF99C2DE61D5100DD47B3 /* Apollo */; };
+		DD6BF99F2DE61D5100DD47B3 /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF99E2DE61D5100DD47B3 /* Authenticate */; };
+		DD6BF9A12DE61D5100DD47B3 /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9A02DE61D5100DD47B3 /* Builders */; };
+		DD6BF9A32DE61D5100DD47B3 /* Castor in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9A22DE61D5100DD47B3 /* Castor */; };
+		DD6BF9A52DE61D5100DD47B3 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9A42DE61D5100DD47B3 /* Domain */; };
+		DD6BF9A72DE61D5100DD47B3 /* EdgeAgent in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9A62DE61D5100DD47B3 /* EdgeAgent */; };
+		DD6BF9A92DE61D5100DD47B3 /* EdgeAgentSDK in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9A82DE61D5100DD47B3 /* EdgeAgentSDK */; };
+		DD6BF9AB2DE61D5100DD47B3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AA2DE61D5100DD47B3 /* Mercury */; };
+		DD6BF9AD2DE61D5100DD47B3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AC2DE61D5100DD47B3 /* Pluto */; };
+		DD6BF9AF2DE61D5100DD47B3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AE2DE61D5100DD47B3 /* Pollux */; };
+		DD6BF9B22DE61F0400DD47B3 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9B12DE61F0400DD47B3 /* Apollo */; };
+		DD6BF9B42DE61F0400DD47B3 /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9B32DE61F0400DD47B3 /* Authenticate */; };
+		DD6BF9B62DE61F0400DD47B3 /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9B52DE61F0400DD47B3 /* Builders */; };
+		DD6BF9B82DE61F0400DD47B3 /* Castor in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9B72DE61F0400DD47B3 /* Castor */; };
+		DD6BF9BA2DE61F0400DD47B3 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9B92DE61F0400DD47B3 /* Domain */; };
+		DD6BF9BC2DE61F0400DD47B3 /* EdgeAgent in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9BB2DE61F0400DD47B3 /* EdgeAgent */; };
+		DD6BF9BE2DE61F0400DD47B3 /* EdgeAgentSDK in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9BD2DE61F0400DD47B3 /* EdgeAgentSDK */; };
+		DD6BF9C02DE61F0400DD47B3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9BF2DE61F0400DD47B3 /* Mercury */; };
+		DD6BF9C22DE61F0400DD47B3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9C12DE61F0400DD47B3 /* Pluto */; };
+		DD6BF9C42DE61F0400DD47B3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9C32DE61F0400DD47B3 /* Pollux */; };
+		DDD641132DE5E4FF005DE0AF /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641122DE5E4FF005DE0AF /* Apollo */; };
+		DDD641152DE5E4FF005DE0AF /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641142DE5E4FF005DE0AF /* Authenticate */; };
+		DDD641172DE5E4FF005DE0AF /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641162DE5E4FF005DE0AF /* Builders */; };
+		DDD641192DE5E4FF005DE0AF /* Castor in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641182DE5E4FF005DE0AF /* Castor */; };
+		DDD6411B2DE5E4FF005DE0AF /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = DDD6411A2DE5E4FF005DE0AF /* Domain */; };
+		DDD6411D2DE5E4FF005DE0AF /* EdgeAgent in Frameworks */ = {isa = PBXBuildFile; productRef = DDD6411C2DE5E4FF005DE0AF /* EdgeAgent */; };
+		DDD6411F2DE5E4FF005DE0AF /* EdgeAgentSDK in Frameworks */ = {isa = PBXBuildFile; productRef = DDD6411E2DE5E4FF005DE0AF /* EdgeAgentSDK */; };
+		DDD641212DE5E4FF005DE0AF /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641202DE5E4FF005DE0AF /* Mercury */; };
+		DDD641232DE5E4FF005DE0AF /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641222DE5E4FF005DE0AF /* Pluto */; };
+		DDD641252DE5E4FF005DE0AF /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = DDD641242DE5E4FF005DE0AF /* Pollux */; };
 		FC4D618F2D18CC1200CB2733 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FC4D618E2D18CC1200CB2733 /* KeychainSwift */; };
 /* End PBXBuildFile section */
 
@@ -66,17 +86,37 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FC3DE75D2CF7771A00D454D3 /* Pollux in Frameworks */,
-				FC3DE75B2CF7771A00D454D3 /* Pluto in Frameworks */,
-				FC3DE7532CF7771A00D454D3 /* Domain in Frameworks */,
-				FC3DE74F2CF7771A00D454D3 /* Builders in Frameworks */,
-				FC3DE74B2CF7771A00D454D3 /* Apollo in Frameworks */,
-				FC3DE7552CF7771A00D454D3 /* EdgeAgent in Frameworks */,
+				DD6BF9BA2DE61F0400DD47B3 /* Domain in Frameworks */,
+				DD6BF9B42DE61F0400DD47B3 /* Authenticate in Frameworks */,
+				DDD6411B2DE5E4FF005DE0AF /* Domain in Frameworks */,
+				DD6BF99D2DE61D5100DD47B3 /* Apollo in Frameworks */,
+				DD6BF9AF2DE61D5100DD47B3 /* Pollux in Frameworks */,
+				DDD6411D2DE5E4FF005DE0AF /* EdgeAgent in Frameworks */,
+				DD6BF9AB2DE61D5100DD47B3 /* Mercury in Frameworks */,
+				DD6BF9C42DE61F0400DD47B3 /* Pollux in Frameworks */,
+				DDD6411F2DE5E4FF005DE0AF /* EdgeAgentSDK in Frameworks */,
+				DD6BF9AD2DE61D5100DD47B3 /* Pluto in Frameworks */,
+				DD6BF9A92DE61D5100DD47B3 /* EdgeAgentSDK in Frameworks */,
+				DDD641252DE5E4FF005DE0AF /* Pollux in Frameworks */,
+				DD6BF9A32DE61D5100DD47B3 /* Castor in Frameworks */,
+				DDD641212DE5E4FF005DE0AF /* Mercury in Frameworks */,
+				DD6BF9B22DE61F0400DD47B3 /* Apollo in Frameworks */,
+				DD6BF99F2DE61D5100DD47B3 /* Authenticate in Frameworks */,
+				DD6BF9C22DE61F0400DD47B3 /* Pluto in Frameworks */,
+				DDD641192DE5E4FF005DE0AF /* Castor in Frameworks */,
+				DD6BF9B82DE61F0400DD47B3 /* Castor in Frameworks */,
+				DDD641232DE5E4FF005DE0AF /* Pluto in Frameworks */,
 				FC4D618F2D18CC1200CB2733 /* KeychainSwift in Frameworks */,
-				FC3DE7512CF7771A00D454D3 /* Castor in Frameworks */,
-				FC3DE7572CF7771A00D454D3 /* EdgeAgentSDK in Frameworks */,
-				FC3DE7592CF7771A00D454D3 /* Mercury in Frameworks */,
-				FC3DE74D2CF7771A00D454D3 /* Authenticate in Frameworks */,
+				DD6BF9A12DE61D5100DD47B3 /* Builders in Frameworks */,
+				DD6BF9B62DE61F0400DD47B3 /* Builders in Frameworks */,
+				DD6BF9C02DE61F0400DD47B3 /* Mercury in Frameworks */,
+				DD6BF9BC2DE61F0400DD47B3 /* EdgeAgent in Frameworks */,
+				DDD641152DE5E4FF005DE0AF /* Authenticate in Frameworks */,
+				DDD641172DE5E4FF005DE0AF /* Builders in Frameworks */,
+				DD6BF9A52DE61D5100DD47B3 /* Domain in Frameworks */,
+				DD6BF9A72DE61D5100DD47B3 /* EdgeAgent in Frameworks */,
+				DD6BF9BE2DE61F0400DD47B3 /* EdgeAgentSDK in Frameworks */,
+				DDD641132DE5E4FF005DE0AF /* Apollo in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,17 +185,37 @@
 			);
 			name = FlightTix;
 			packageProductDependencies = (
-				FC3DE74A2CF7771A00D454D3 /* Apollo */,
-				FC3DE74C2CF7771A00D454D3 /* Authenticate */,
-				FC3DE74E2CF7771A00D454D3 /* Builders */,
-				FC3DE7502CF7771A00D454D3 /* Castor */,
-				FC3DE7522CF7771A00D454D3 /* Domain */,
-				FC3DE7542CF7771A00D454D3 /* EdgeAgent */,
-				FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */,
-				FC3DE7582CF7771A00D454D3 /* Mercury */,
-				FC3DE75A2CF7771A00D454D3 /* Pluto */,
-				FC3DE75C2CF7771A00D454D3 /* Pollux */,
 				FC4D618E2D18CC1200CB2733 /* KeychainSwift */,
+				DDD641122DE5E4FF005DE0AF /* Apollo */,
+				DDD641142DE5E4FF005DE0AF /* Authenticate */,
+				DDD641162DE5E4FF005DE0AF /* Builders */,
+				DDD641182DE5E4FF005DE0AF /* Castor */,
+				DDD6411A2DE5E4FF005DE0AF /* Domain */,
+				DDD6411C2DE5E4FF005DE0AF /* EdgeAgent */,
+				DDD6411E2DE5E4FF005DE0AF /* EdgeAgentSDK */,
+				DDD641202DE5E4FF005DE0AF /* Mercury */,
+				DDD641222DE5E4FF005DE0AF /* Pluto */,
+				DDD641242DE5E4FF005DE0AF /* Pollux */,
+				DD6BF99C2DE61D5100DD47B3 /* Apollo */,
+				DD6BF99E2DE61D5100DD47B3 /* Authenticate */,
+				DD6BF9A02DE61D5100DD47B3 /* Builders */,
+				DD6BF9A22DE61D5100DD47B3 /* Castor */,
+				DD6BF9A42DE61D5100DD47B3 /* Domain */,
+				DD6BF9A62DE61D5100DD47B3 /* EdgeAgent */,
+				DD6BF9A82DE61D5100DD47B3 /* EdgeAgentSDK */,
+				DD6BF9AA2DE61D5100DD47B3 /* Mercury */,
+				DD6BF9AC2DE61D5100DD47B3 /* Pluto */,
+				DD6BF9AE2DE61D5100DD47B3 /* Pollux */,
+				DD6BF9B12DE61F0400DD47B3 /* Apollo */,
+				DD6BF9B32DE61F0400DD47B3 /* Authenticate */,
+				DD6BF9B52DE61F0400DD47B3 /* Builders */,
+				DD6BF9B72DE61F0400DD47B3 /* Castor */,
+				DD6BF9B92DE61F0400DD47B3 /* Domain */,
+				DD6BF9BB2DE61F0400DD47B3 /* EdgeAgent */,
+				DD6BF9BD2DE61F0400DD47B3 /* EdgeAgentSDK */,
+				DD6BF9BF2DE61F0400DD47B3 /* Mercury */,
+				DD6BF9C12DE61F0400DD47B3 /* Pluto */,
+				DD6BF9C32DE61F0400DD47B3 /* Pollux */,
 			);
 			productName = FlightTix;
 			productReference = FCC0A7822CE00D3D00649302 /* FlightTix.app */;
@@ -240,8 +300,8 @@
 			mainGroup = FCC0A7792CE00D3D00649302;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */,
 				FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */,
+				DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
@@ -649,9 +709,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */ = {
+		DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/hyperledger-identus/sdk-swift";
+			repositoryURL = "git@github.com:hyperledger-identus/sdk-swift.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 7.0.0;
@@ -668,54 +728,134 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		FC3DE74A2CF7771A00D454D3 /* Apollo */ = {
+		DD6BF99C2DE61D5100DD47B3 /* Apollo */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Apollo;
 		};
-		FC3DE74C2CF7771A00D454D3 /* Authenticate */ = {
+		DD6BF99E2DE61D5100DD47B3 /* Authenticate */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Authenticate;
 		};
-		FC3DE74E2CF7771A00D454D3 /* Builders */ = {
+		DD6BF9A02DE61D5100DD47B3 /* Builders */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Builders;
 		};
-		FC3DE7502CF7771A00D454D3 /* Castor */ = {
+		DD6BF9A22DE61D5100DD47B3 /* Castor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Castor;
 		};
-		FC3DE7522CF7771A00D454D3 /* Domain */ = {
+		DD6BF9A42DE61D5100DD47B3 /* Domain */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Domain;
 		};
-		FC3DE7542CF7771A00D454D3 /* EdgeAgent */ = {
+		DD6BF9A62DE61D5100DD47B3 /* EdgeAgent */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = EdgeAgent;
 		};
-		FC3DE7562CF7771A00D454D3 /* EdgeAgentSDK */ = {
+		DD6BF9A82DE61D5100DD47B3 /* EdgeAgentSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = EdgeAgentSDK;
 		};
-		FC3DE7582CF7771A00D454D3 /* Mercury */ = {
+		DD6BF9AA2DE61D5100DD47B3 /* Mercury */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Mercury;
 		};
-		FC3DE75A2CF7771A00D454D3 /* Pluto */ = {
+		DD6BF9AC2DE61D5100DD47B3 /* Pluto */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
 			productName = Pluto;
 		};
-		FC3DE75C2CF7771A00D454D3 /* Pollux */ = {
+		DD6BF9AE2DE61D5100DD47B3 /* Pollux */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC3DE7492CF7771A00D454D3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Pollux;
+		};
+		DD6BF9B12DE61F0400DD47B3 /* Apollo */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Apollo;
+		};
+		DD6BF9B32DE61F0400DD47B3 /* Authenticate */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Authenticate;
+		};
+		DD6BF9B52DE61F0400DD47B3 /* Builders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Builders;
+		};
+		DD6BF9B72DE61F0400DD47B3 /* Castor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Castor;
+		};
+		DD6BF9B92DE61F0400DD47B3 /* Domain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Domain;
+		};
+		DD6BF9BB2DE61F0400DD47B3 /* EdgeAgent */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = EdgeAgent;
+		};
+		DD6BF9BD2DE61F0400DD47B3 /* EdgeAgentSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = EdgeAgentSDK;
+		};
+		DD6BF9BF2DE61F0400DD47B3 /* Mercury */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Mercury;
+		};
+		DD6BF9C12DE61F0400DD47B3 /* Pluto */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Pluto;
+		};
+		DD6BF9C32DE61F0400DD47B3 /* Pollux */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD6BF9B02DE61F0400DD47B3 /* XCRemoteSwiftPackageReference "sdk-swift" */;
+			productName = Pollux;
+		};
+		DDD641122DE5E4FF005DE0AF /* Apollo */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Apollo;
+		};
+		DDD641142DE5E4FF005DE0AF /* Authenticate */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Authenticate;
+		};
+		DDD641162DE5E4FF005DE0AF /* Builders */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Builders;
+		};
+		DDD641182DE5E4FF005DE0AF /* Castor */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Castor;
+		};
+		DDD6411A2DE5E4FF005DE0AF /* Domain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Domain;
+		};
+		DDD6411C2DE5E4FF005DE0AF /* EdgeAgent */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = EdgeAgent;
+		};
+		DDD6411E2DE5E4FF005DE0AF /* EdgeAgentSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = EdgeAgentSDK;
+		};
+		DDD641202DE5E4FF005DE0AF /* Mercury */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Mercury;
+		};
+		DDD641222DE5E4FF005DE0AF /* Pluto */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Pluto;
+		};
+		DDD641242DE5E4FF005DE0AF /* Pollux */ = {
+			isa = XCSwiftPackageProductDependency;
 			productName = Pollux;
 		};
 		FC4D618E2D18CC1200CB2733 /* KeychainSwift */ = {

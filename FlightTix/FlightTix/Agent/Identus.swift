@@ -30,6 +30,9 @@ final class Identus: ObservableObject {
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
     final class PassportFailedToReadFromKeychainError: Error {}
     final class CredentialNotFoundError: Error {}
+    final class PrepareRequestCredentialWithIssuerError: Error {}
+    final class HandleIssuedCredentialError: Error {}
+    final class HandleOfferedCredentialError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -633,157 +636,67 @@ final class Identus: ObservableObject {
                     return message
                 }
                 
-                switch msgType {
-                case .didcommBasicMessage,
-                        .didcommMediationRequest,
-                        .didcommMediationGrant,
-                        .didcommMediationDeny,
-                        .didcommMediationKeysUpdate,
+                    switch msgType {
+                    case .didcommBasicMessage,
+                            .didcommMediationRequest,
+                            .didcommMediationGrant,
+                            .didcommMediationDeny,
+                            .didcommMediationKeysUpdate,
+                            .didcommCredentialPreview,
+                            .didcommCredentialPreview3_0,
+                            .didcommIssueCredential,
+                            .didcommProposeCredential,
+                            .didcommProposeCredential3_0,
+                            .didcommRequestCredential,
+                            .didcommRequestCredential3_0,
+                            .didcommconnectionRequest,
+                            .didcommRevocationNotification,
+                            .didcomminvitation,
+                            .didcommReportProblem,
+                            .prismOnboarding,
+                            .didcommOfferCredential,
+                            .pickupStatus,
+                            .pickupDelivery,
+                            .pickupReceived,
+                            .pickupRequest,
+                            .didcommProposePresentation,
+                            .didcommconnectionResponse:
+                        print(message)
+                        print("")
+                    case .didcommPresentation:
+                        // Used when passing Presentations between Edge Agents (eg. mobile to mobile)
+                        // Not used in this example application
+                        print(message)
+                        let presentation = try Presentation(fromMessage: message)
+                        let verified = try await self.didCommAgent?.verifyPresentation(message: message)
                         
-                        .didcommCredentialPreview,
-                        .didcommCredentialPreview3_0,
-                        .didcommIssueCredential,
-                        .didcommProposeCredential,
-                        .didcommProposeCredential3_0,
-                        .didcommRequestCredential,
-                        .didcommRequestCredential3_0,
-                        .didcommconnectionRequest,
-                        .didcommRevocationNotification,
-                        .didcomminvitation,
-                        .didcommReportProblem,
-                        .prismOnboarding,
-//                        .pickupRequest,
-//                        .pickupDelivery,
-//                        
-//                        .pickupReceived,
-                        .didcommOfferCredential:
-                    print("")
-                case .didcommPresentation:
-                    // Used when passing Presentations between Edge Agents
-                    print("DIDCOMM PRESENTATION MESSAGE RECEIVED")
-                    print(message)
-                    let presentation = try Presentation(fromMessage: message)
-                    let verified = try await self.didCommAgent?.verifyPresentation(message: message)
-                    
-                case .didcommRequestPresentation:
-                    // Used when receiving a Presentation request from a Verifier
-                    print("DIDCOMM REQUEST PRESENTATION MESSAGE RECEIVED")
-                    print(message)
-                    
-                    let credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }.first().await()
-                    
-                    
-                    guard let credential else {
-                        print("Credential Not Found!")
-                        throw CredentialNotFoundError()
-                    }
-
-                    if let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
-                        request: try RequestPresentation(fromMessage: message),
-                        credential: credential
-                    ) {
-                        
-                        if let sentMessage = try await self.didCommAgent?.sendMessage(message: try presentation.makeMessage()) {
-                            print("Signed Presentation sent. \(sentMessage)")
+                    case .didcommRequestPresentation:
+                        // Used when receiving a Presentation request from a Verifier
+                        do {
+                            let presentation = try await self.handleRequestPresentation(message: message)
+                        } catch {
+                            print("HandleRequestPresentation() failed: \(error)")
+                            throw error
                         }
-                    }
-
-                case .didcommProposePresentation:
-                    print("DIDCOMM PROPOSE PRESENTATION MESSAGE RECEIVED")
-                    print(message)
-                    
-                case .pickupStatus:
-                    print(message)
-                case .pickupDelivery:
-                    print(message)
-                case .pickupReceived:
-                    print(message)
-                case .pickupRequest:
-                    print(message)
-                case .didcommIssueCredential3_0:
-                    let issueCredential = try IssueCredential3_0(fromMessage: message)
-                    
-                    // We only want to operate on actions we have matching thids for
-                    
-                    // Passport VC Issuance
-                    guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
-                        return message
-                    }
-                        if issueCredential.thid == expectedThidForPassportVCIssuance {
-                        Task { @MainActor in
-                            do {
-                                print("-------------------------------")
-                                print("Attempting to process Credential")
-                                print("-------------------------------")
-                                _ = try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
-                                print("-------------------------------")
-                                print("Processed Credential")
-                                print("-------------------------------")
-                            } catch {
-                                print("PROCESSING CREDENTIAL FAILED")
-                            }
-                        }
-                        }
-
-                
-                case .didcommOfferCredential3_0:
-                    print("Offer Credential Received")
-                    let offerCredential = try OfferCredential3_0(fromMessage: message)
-                    
-                    // Process Passport VC Credential
-                    guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
-                        return message
-                    }
-                    if offerCredential.thid == expectedThidForPassportVCIssuance {
+                    case .didcommIssueCredential3_0:
                         
                         do {
-                            guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
-                                print("Did not create new did")
-                                return message
-                            }
-
-                            guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
-                                did: newPrismDID,
-                                offer: offerCredential
-                            ) else {
-                                print("SOMETHING WENT WRONG DURING PREPARE REQUEST CREDENTIALWITHISSUER")
-                                throw UnknownError.somethingWentWrongError()
-                            }
-                            
-                            let messageToSend = try requestCredential.makeMessage()
-                            
-                            Task { @MainActor in
-                                try await self.didCommAgent?.sendMessage(message: messageToSend)
-                            }
-                            
-//                            Future { [weak self] in
-//                                try await self?.didCommAgent?.sendMessage(message: messageToSend)
-//                            }.eraseToAnyPublisher()
-                          
+                            let storedCredential = try await self.handleIssuedCredential(message: message)
                         } catch {
-                            print(error)
+                            print("HandleIssuedCredential() failed: \(error)")
+                            throw error
+                        }
+                        
+                    case .didcommOfferCredential3_0:
+                        
+                        do {
+                            let requestCredential = try await self.handleOfferedCredential(message: message)
+                        } catch {
+                            print("HandlerOfferedCredential() failed: \(error)")
+                            throw error
                         }
                     }
-                    
-                
-                case .didcommconnectionResponse:
-                    print("")
-    //                    print("Connection Response: \(message)")
-                    
-                    
-    //                    if let connectionAccept = try? ConnectionAccept(fromMessage: message) {
-    //                        print("ConnectionAccept: \(connectionAccept)")
-    //                        // Store connectionId
-    ////                                            if let thid = connectionAccept.thid {
-    ////                                                if !self.storeConnectionIdInKeychain(connectionId: thid) {
-    ////                                                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
-    ////                                                }
-    ////                                            }
-    //                    }
-                }
-                
-                return message
-                    
+                    return message
             })
             //.subscribe(on: DispatchQueue.main)
             .eraseToAnyPublisher()
@@ -805,29 +718,110 @@ final class Identus: ObservableObject {
             }
         )
         .store(in: &messageCancellables)
-
-            
-//            do {
-//                if let issued = try? IssueCredential(fromMessage: message) {
-//                    
-//                    print("Issued: \(issued)")
-//                    
-//                    _ = try issued.attachments.compactMap {
-//                        switch $0.data {
-//                        case let data as AttachmentBase64:
-//                            // is this where we call processCredential(data)?
-//                            break
-//                        default:
-//                            return
-//                        }
-//                    }
-//                }
-//            } catch {
-//                print(error)
-//            }
-        //}
-//        .store(in: &cancellables)
     }
+    
+    private func handleIssuedCredential(message: Message) async throws -> Credential? {
+        let issueCredential = try IssueCredential3_0(fromMessage: message)
+        
+        // We only want to operate on actions we have matching thids for
+        
+        // Passport VC Issuance
+        guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
+            return nil
+        }
+        if issueCredential.thid == expectedThidForPassportVCIssuance {
+            Task { @MainActor in
+                do {
+                    return try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
+                } catch {
+                    throw error
+                }
+            }
+        }
+        throw HandleIssuedCredentialError()
+    }
+    
+    
+    private func handleOfferedCredential(message: Message) async throws -> RequestCredential3_0? {
+        print("Offer Credential Received")
+        let offerCredential = try OfferCredential3_0(fromMessage: message)
+        
+        // Process Passport VC Credential
+        guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
+            return nil
+        }
+        if offerCredential.thid == expectedThidForPassportVCIssuance {
+            
+            do {
+                guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
+                    print("Did not create new did")
+                    return nil
+                }
+
+                guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
+                    did: newPrismDID,
+                    offer: offerCredential
+                ) else {
+                    throw PrepareRequestCredentialWithIssuerError()
+                }
+                print("OfferCredential: RequestCredential \(requestCredential)")
+                
+                let messageToSend = try requestCredential.makeMessage()
+                print("OfferCredential: MessageToSend \(messageToSend)")
+                
+                Task { @MainActor in
+                    do {
+                        if let sentMessage = try await self.didCommAgent?.sendMessage(message: messageToSend) {
+                            print(sentMessage)
+                            return requestCredential
+                        }
+                    } catch {
+                        print("OfferCredential: Message Send Failed \(error)")
+                        
+                    }
+                    throw HandleOfferedCredentialError()
+                }
+                
+            } catch {
+                print(error)
+                throw HandleOfferedCredentialError()
+            }
+        }
+        throw HandleOfferedCredentialError()
+    }
+    
+    private func handleRequestPresentation(message: Message) async throws -> Presentation? {
+        
+        let credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }.first().await()
+        
+        guard let credential else {
+            print("Credential Not Found!")
+            throw CredentialNotFoundError()
+        }
+        
+        if let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
+            request: try RequestPresentation(fromMessage: message),
+            credential: credential) {
+            
+            print("Presentation For Request Proof Created: \(presentation)")
+            
+            let presentationMessage = try presentation.makeMessage()
+            
+            print("presentationMessage: \(presentationMessage)")
+            
+            do {
+                if let sentMessage = try await self.didCommAgent?.sendMessage(message: presentationMessage) {
+                    print("Signed Presentation sent. \(sentMessage)")
+                    return presentation
+                }
+            } catch {
+                print("Send Message Failure: \(error)")
+                return nil
+            }
+        }
+        return nil
+    }
+    
     
     private func connectionExists(connectionId: String, label: String?) async throws -> Bool {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
