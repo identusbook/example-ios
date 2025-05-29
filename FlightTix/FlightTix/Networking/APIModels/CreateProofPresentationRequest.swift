@@ -8,11 +8,11 @@
 import Foundation
 
 struct CreateProofPresentationRequest: Encodable {
-    let goalCode: String
-    let goal: String
+    //let goalCode: String
+    //let goal: String
     let connectionId: String
     let options: Options
-    let proofs: [ProofRequestAux] // What is ProofRequestAux type?
+    let proofs: [ProofRequestAuxRequest] // What is ProofRequestAux type?
     //let anoncredPresentationRequest: String
     //let presentationFormat: String
     //let claims: [String: String] for SD-JWT
@@ -23,5 +23,8 @@ struct CreateProofPresentationRequest: Encodable {
         let domain: String
     }
     
-    struct ProofRequestAux: Encodable {}
+    struct ProofRequestAuxRequest: Encodable {
+        let schemaId: String
+        let trustIssuers: [String]?
+    }
 }

@@ -90,9 +90,9 @@ extension APIClient {
         }
        
         // Present Proof
-        func getPresentations() async throws -> PresentationsResponse? {
+        func getPresentations() async throws -> PresentationsResponse {
             let url = URL(string: "\(baseURL)/present-proof/presentations")!
-            return try await get(url: url)
+            return try await getNonOptional(url: url)
         }
         
         func getProofPresentationRecord(presentationId: String) async throws -> PresentationResponseContent? {
@@ -100,7 +100,7 @@ extension APIClient {
             return try await get(url: url)
         }
        
-        func createProofPresentation(request: CreateProofPresentationRequest) async throws -> PresentationsResponse? {
+        func createProofPresentation(request: CreateProofPresentationRequest) async throws -> PresentationResponseContent? {
             let url = URL(string: "\(baseURL)/present-proof/presentations")!
             return try await postWithoutEscapingSlashes(url: url, request: request)
         }
@@ -142,6 +142,26 @@ extension APIClient.CloudAgent {
         } catch {
             throw GetError()
         }
+    }
+    
+    func getNonOptional<T>(url: URL) async throws -> T where T:Decodable {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+      
+        //do {
+            let response = try await api.handleRequest(request: request)
+            guard let data = try await api.dataFromResponse(urlResponse: response.response, data: response.data) else {
+                throw DecodeError()
+            }
+            
+            if let decoded = try? JSONDecoder().decode(T.self, from: data) {
+                print("decoded: \(decoded)")
+            }
+            
+            return try JSONDecoder().decode(T.self, from: data)
+//        } catch {
+//            throw GetError()
+//        }
     }
     
     func post<T,R>(url: URL, requestBody: R) async throws -> T? where T:Decodable, R:Encodable {
