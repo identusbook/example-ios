@@ -75,7 +75,6 @@ class RegisterViewModel: ObservableObject {
                 issuingDID: shortFormIssuerDID.string,
                 connectionId: currentConnectionId
             ))
-            print("We should have created a CreditentialOffer at this point \(String(describing: credentialOffer))")
             
             // Store thid as identifier we can use to track the response from DIDComm
             guard Identus.shared.storePassportVCThidInKeychain(thid: credentialOffer.thid) else {
