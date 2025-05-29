@@ -41,8 +41,8 @@ struct RegisterScreen: View {
             throw RegisterFormRegisterError()
         }
         
-        // Wait 40 seconds for for Credential dance before trying to verify
-        try await Task.sleep(nanoseconds: 40_000_000_000)
+        // Wait 20 seconds for for Credential dance before trying to verify
+        try await Task.sleep(nanoseconds: 20_000_000_000)
         
         // Verify: Request Proof of valid Passport VC
         let presentation = try await model.requestProof()
