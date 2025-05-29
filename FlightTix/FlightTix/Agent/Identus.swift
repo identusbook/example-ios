@@ -642,84 +642,76 @@ final class Identus: ObservableObject {
         didCommAgent?.startFetchingMessages()
         didCommAgent?.handleReceivedMessagesEvents()
             .receive(on: DispatchQueue.main)
-            .flatMap { message -> AnyPublisher<Message, Error> in
+            .flatMap(maxPublishers: .max(1)) { message -> AnyPublisher<Message, Error> in
             
-            Future(
-                operation: {
-                guard message.direction == .received,
-                      let msgType = ProtocolTypes(rawValue: message.piuri)
-                      
-                else {
-                    return message
-                }
-                    messageIndex = messageIndex + 1
-
-                    if let messageCreatedTime = lastProcessedMessageCreatedTime {
-                        if messageCreatedTime >= message.createdTime {
-                            return message
+            Future<Message, Error> { promise in
+                Task {
+                    do {
+                        guard message.direction == .received,
+                              let msgType = ProtocolTypes(rawValue: message.piuri)
+                        else {
+                            promise(.success(message))
+                            return
                         }
-                    }
-                    
-                    print(message.createdTime)
-                    
-                    switch msgType {
-                    case .didcommBasicMessage,
-                            .didcommMediationRequest,
-                            .didcommMediationGrant,
-                            .didcommMediationDeny,
-                            .didcommMediationKeysUpdate,
-                            .didcommCredentialPreview,
-                            .didcommCredentialPreview3_0,
-                            .didcommIssueCredential,
-                            .didcommProposeCredential,
-                            .didcommProposeCredential3_0,
-                            .didcommRequestCredential,
-                            .didcommRequestCredential3_0,
-                            .didcommconnectionRequest,
-                            .didcommRevocationNotification,
-                            .didcomminvitation,
-                            .didcommReportProblem,
-                            .prismOnboarding,
-                            .didcommOfferCredential,
-                            .pickupStatus,
-                            .pickupDelivery,
-                            .pickupReceived,
-                            .pickupRequest,
-                            .didcommProposePresentation,
-                            .didcommPresentation:
-                        print("Unhandled Message Type: \(message) \n")
-                    case .didcommconnectionResponse:
-                        print("Connection Response Message Received \n")
-                    case .didcommOfferCredential3_0:
-                        // An offer for a Credential has been made
-                        do {
-                            _ = try await self.handleOfferedCredential(message: message)
-                        } catch {
-                            print("HandlerOfferedCredential() failed: \(error) \n")
+                        messageIndex = messageIndex + 1
+                        
+                        if let messageCreatedTime = lastProcessedMessageCreatedTime {
+                            if messageCreatedTime >= message.createdTime {
+                                promise(.success(message))
+                                return
+                            }
                         }
                         
-                        lastProcessedMessageCreatedTime = message.createdTime
-                    case .didcommIssueCredential3_0:
-                        // A Credential has been issued, process and save it to our wallet
-                        do {
+                        print(message.createdTime)
+                        
+                        switch msgType {
+                        case .didcommBasicMessage,
+                                .didcommMediationRequest,
+                                .didcommMediationGrant,
+                                .didcommMediationDeny,
+                                .didcommMediationKeysUpdate,
+                                .didcommCredentialPreview,
+                                .didcommCredentialPreview3_0,
+                                .didcommIssueCredential,
+                                .didcommProposeCredential,
+                                .didcommProposeCredential3_0,
+                                .didcommRequestCredential,
+                                .didcommRequestCredential3_0,
+                                .didcommconnectionRequest,
+                                .didcommRevocationNotification,
+                                .didcomminvitation,
+                                .didcommReportProblem,
+                                .prismOnboarding,
+                                .didcommOfferCredential,
+                                .pickupStatus,
+                                .pickupDelivery,
+                                .pickupReceived,
+                                .pickupRequest,
+                                .didcommProposePresentation,
+                                .didcommPresentation:
+                            print("Unhandled Message Type: \(message) \n")
+                        case .didcommconnectionResponse:
+                            print("Connection Response Message Received \n")
+                        case .didcommOfferCredential3_0:
+                            // An offer for a Credential has been made
+                            _ = try await self.handleOfferedCredential(message: message)
+                            lastProcessedMessageCreatedTime = message.createdTime
+                        case .didcommIssueCredential3_0:
+                            // A Credential has been issued, process and save it to our wallet
                             _ = try await self.handleIssuedCredential(message: message)
-                        } catch {
-                            print("HandleIssuedCredential() failed: \(error) \n")
-                        }
-                        lastProcessedMessageCreatedTime = message.createdTime
-                    case .didcommRequestPresentation:
-                        // A Verifier has created a Presentation Request
-                        do {
+                            lastProcessedMessageCreatedTime = message.createdTime
+                        case .didcommRequestPresentation:
+                            // A Verifier has created a Presentation Request
                             _ = try await self.handleRequestPresentation(message: message)
-                        } catch {
-                            print("HandleRequestPresentation() failed: \(error) \n")
+                            lastProcessedMessageCreatedTime = message.createdTime
                         }
-                        lastProcessedMessageCreatedTime = message.createdTime
+                        promise(.success(message))
+                    } catch {
+                        promise(.failure(error))
                     }
-                    return message
-            })
+                }
+            }
             .eraseToAnyPublisher()
-             //print("processing stream events")
         }
         .sink(
             receiveCompletion: { completion in
@@ -731,7 +723,6 @@ final class Identus: ObservableObject {
                 }
             },
             receiveValue: { value in
-                print("Combine sink receiveValue")
             }
         )
         .store(in: &messageCancellables)
@@ -776,8 +767,9 @@ final class Identus: ObservableObject {
         }
         
         Task { @MainActor in
-            // Send Reply Message
-            guard let sentMessage = try await self.didCommAgent?.sendMessage(message: madeMessage) else {
+            do {
+                _ = try await self.didCommAgent?.sendMessage(message: madeMessage)
+            } catch {
                 throw HandleOfferedCredentialSendMessageError()
             }
         }
@@ -785,26 +777,17 @@ final class Identus: ObservableObject {
         return requestCredential
     }
     
-    private func handleIssuedCredential(message: Message) async throws -> Credential? {
+    private func handleIssuedCredential(message: Message) async throws {
         print("Credential Issued")
         let issueCredential = try IssueCredential3_0(fromMessage: message)
         
-        // We only want to operate on actions we have matching thids for
-        
-        // Passport VC Issuance
-        guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
-            return nil
-        }
-        if issueCredential.thid == expectedThidForPassportVCIssuance {
-            Task { @MainActor in
-                do {
-                    return try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
-                } catch {
-                    throw error
-                }
+        Task { @MainActor in
+            do {
+                return try await self.didCommAgent?.processIssuedCredentialMessage(message: issueCredential)
+            } catch {
+                throw HandleIssuedCredentialError()
             }
         }
-        throw HandleIssuedCredentialError()
     }
     
     private func handleRequestPresentation(message: Message) async throws -> Presentation? {
@@ -824,10 +807,11 @@ final class Identus: ObservableObject {
         let presentationMessage = try presentation.makeMessage()
         
         Task { @MainActor in
-            guard let sentMessage = try await self.didCommAgent?.sendMessage(message: presentationMessage) else {
+            do {
+                _ = try await self.didCommAgent?.sendMessage(message: presentationMessage)
+            } catch {
                 throw HandlePresentationFailedError()
             }
-            print("Signed Presentation Message Sent. \(sentMessage)")
         }
         return presentation
     }
