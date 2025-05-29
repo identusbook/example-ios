@@ -32,6 +32,7 @@ final class Identus: ObservableObject {
     final class PassportFailedToReadFromKeychainError: Error {}
     final class CredentialNotFoundError: Error {}
     final class PrepareRequestCredentialWithIssuerError: Error {}
+    final class HandlePresentationFailedError: Error {}
     
     final class HandleIssuedCredentialError: Error {}
     final class HandleOfferedCredentialError: Error {}
@@ -774,9 +775,11 @@ final class Identus: ObservableObject {
             throw HandleOfferedCredentialMessageNilError()
         }
         
-        // Send Reply Message
-        guard let sentMessage = try await self.didCommAgent?.sendMessage(message: madeMessage) else {
-            throw HandleOfferedCredentialSendMessageError()
+        Task { @MainActor in
+            // Send Reply Message
+            guard let sentMessage = try await self.didCommAgent?.sendMessage(message: madeMessage) else {
+                throw HandleOfferedCredentialSendMessageError()
+            }
         }
         
         return requestCredential
@@ -813,27 +816,20 @@ final class Identus: ObservableObject {
             throw CredentialNotFoundError()
         }
         
-        if let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
+        guard let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
             request: try RequestPresentation(fromMessage: message),
-            credential: credential) {
-            
-            print("Presentation For Request Proof Created: \(presentation)")
-            
-            let presentationMessage = try presentation.makeMessage()
-            
-            print("presentationMessage: \(presentationMessage)")
-            
-            do {
-                if let sentMessage = try await self.didCommAgent?.sendMessage(message: presentationMessage) {
-                    print("Signed Presentation sent. \(sentMessage)")
-                    return presentation
-                }
-            } catch {
-                print("Send Message Failure: \(error)")
-                return nil
-            }
+            credential: credential) else {
+            throw HandlePresentationFailedError()
         }
-        return nil
+        let presentationMessage = try presentation.makeMessage()
+        
+        Task { @MainActor in
+            guard let sentMessage = try await self.didCommAgent?.sendMessage(message: presentationMessage) else {
+                throw HandlePresentationFailedError()
+            }
+            print("Signed Presentation Message Sent. \(sentMessage)")
+        }
+        return presentation
     }
     
     
