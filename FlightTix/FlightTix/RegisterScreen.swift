@@ -41,22 +41,16 @@ struct RegisterScreen: View {
             throw RegisterFormRegisterError()
         }
         
-        // Wait 60 seconds for for Credential dance before trying to verify
-        try await Task.sleep(nanoseconds: 60_000_000_000)
+        // Wait 40 seconds for for Credential dance before trying to verify
+        try await Task.sleep(nanoseconds: 40_000_000_000)
         
-        do {
-            // Verify: Request Proof of valid Passport VC
-            let presentation = try await model.requestProof()
-            print("PRESENTATION REQUEST IS: \(presentation)")
-            
-            try await Task.sleep(nanoseconds: 30_000_000_000)
-            
-            // Dismiss LoginScreen after Proof flow is complete
-            dismiss()
-        } catch {
-            print(error)
-            throw RegisterFormVerifyCredentialError()
-        }
+        // Verify: Request Proof of valid Passport VC
+        let presentation = try await model.requestProof()
+        //print("PRESENTATION REQUEST IS: \(presentation)")
+        
+        // Dismiss LoginScreen after Proof flow is complete
+        dismiss()
+        
     }
     
     var body: some View {

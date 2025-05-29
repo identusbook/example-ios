@@ -27,12 +27,18 @@ final class Identus: ObservableObject {
     final class PassportSchemaIdFailedToDeleteFromKeychainError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
     final class IssuerDIDNotPublishedError: Error {}
+    final class PassportVCThidFailedToReadFromKeychainError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
     final class PassportFailedToReadFromKeychainError: Error {}
     final class CredentialNotFoundError: Error {}
     final class PrepareRequestCredentialWithIssuerError: Error {}
+    
     final class HandleIssuedCredentialError: Error {}
     final class HandleOfferedCredentialError: Error {}
+    final class HandleOfferedCredentialMessageNilError: Error {}
+    final class HandleOfferedCredentialMakeMessageError: Error {}
+    final class HandleOfferedCredentialSendMessageError: Error {}
+    final class HandleOfferedCredentialCreatePrismDIDError: Error {}
     
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
@@ -66,6 +72,8 @@ final class Identus: ObservableObject {
     private var credentialCancellables = Set<AnyCancellable>()
     private var messageCancellables = Set<AnyCancellable>()
     
+    private var uuid: UUID = UUID()
+    
     // Singleton Configuration
     private static var config: IdentusConfig?
     class func setup(_ config: IdentusConfig){
@@ -75,6 +83,7 @@ final class Identus: ObservableObject {
     // Singleton Init with Configuration
     static var shared: Identus = Identus(config: IdentusConfig())
     private init(config: IdentusConfig) {
+        print("Identus init called using uuid: \(uuid)")
         
         guard let config = Identus.config else { fatalError("Identus config not set. Must call Identus.setup(IdentusConfig()) before first use.") }
         
@@ -625,17 +634,33 @@ final class Identus: ObservableObject {
     
     @MainActor
     private func startMessageStream() {
+        
+        var messageIndex: Int = 0
+        var lastProcessedMessageCreatedTime: Date?
+        
         didCommAgent?.startFetchingMessages()
-        didCommAgent?.handleReceivedMessagesEvents().receive(on: DispatchQueue.main).flatMap { message -> AnyPublisher<Message, Error> in
+        didCommAgent?.handleReceivedMessagesEvents()
+            .receive(on: DispatchQueue.main)
+            .flatMap { message -> AnyPublisher<Message, Error> in
             
             Future(
                 operation: {
                 guard message.direction == .received,
                       let msgType = ProtocolTypes(rawValue: message.piuri)
+                      
                 else {
                     return message
                 }
-                
+                    messageIndex = messageIndex + 1
+
+                    if let messageCreatedTime = lastProcessedMessageCreatedTime {
+                        if messageCreatedTime >= message.createdTime {
+                            return message
+                        }
+                    }
+                    
+                    print(message.createdTime)
+                    
                     switch msgType {
                     case .didcommBasicMessage,
                             .didcommMediationRequest,
@@ -660,47 +685,40 @@ final class Identus: ObservableObject {
                             .pickupReceived,
                             .pickupRequest,
                             .didcommProposePresentation,
-                            .didcommconnectionResponse:
-                        print(message)
-                        print("")
-                    case .didcommPresentation:
-                        // Used when passing Presentations between Edge Agents (eg. mobile to mobile)
-                        // Not used in this example application
-                        print(message)
-                        let presentation = try Presentation(fromMessage: message)
-                        let verified = try await self.didCommAgent?.verifyPresentation(message: message)
-                        
-                    case .didcommRequestPresentation:
-                        // Used when receiving a Presentation request from a Verifier
-                        do {
-                            let presentation = try await self.handleRequestPresentation(message: message)
-                        } catch {
-                            print("HandleRequestPresentation() failed: \(error)")
-                            throw error
-                        }
-                    case .didcommIssueCredential3_0:
-                        
-                        do {
-                            let storedCredential = try await self.handleIssuedCredential(message: message)
-                        } catch {
-                            print("HandleIssuedCredential() failed: \(error)")
-                            throw error
-                        }
-                        
+                            .didcommPresentation:
+                        print("Unhandled Message Type: \(message) \n")
+                    case .didcommconnectionResponse:
+                        print("Connection Response Message Received \n")
                     case .didcommOfferCredential3_0:
-                        
+                        // An offer for a Credential has been made
                         do {
-                            let requestCredential = try await self.handleOfferedCredential(message: message)
+                            _ = try await self.handleOfferedCredential(message: message)
                         } catch {
-                            print("HandlerOfferedCredential() failed: \(error)")
-                            throw error
+                            print("HandlerOfferedCredential() failed: \(error) \n")
                         }
+                        
+                        lastProcessedMessageCreatedTime = message.createdTime
+                    case .didcommIssueCredential3_0:
+                        // A Credential has been issued, process and save it to our wallet
+                        do {
+                            _ = try await self.handleIssuedCredential(message: message)
+                        } catch {
+                            print("HandleIssuedCredential() failed: \(error) \n")
+                        }
+                        lastProcessedMessageCreatedTime = message.createdTime
+                    case .didcommRequestPresentation:
+                        // A Verifier has created a Presentation Request
+                        do {
+                            _ = try await self.handleRequestPresentation(message: message)
+                        } catch {
+                            print("HandleRequestPresentation() failed: \(error) \n")
+                        }
+                        lastProcessedMessageCreatedTime = message.createdTime
                     }
                     return message
             })
-            //.subscribe(on: DispatchQueue.main)
             .eraseToAnyPublisher()
-             
+             //print("processing stream events")
         }
         .sink(
             receiveCompletion: { completion in
@@ -712,15 +730,60 @@ final class Identus: ObservableObject {
                 }
             },
             receiveValue: { value in
-                //print("Combine sink receiveValue reached: \(value)")
-                print("Combine sink receiveValue reached")
-                
+                print("Combine sink receiveValue")
             }
         )
         .store(in: &messageCancellables)
     }
     
+    private func handleOfferedCredential(message: Message) async throws -> RequestCredential3_0? {
+        print("Offer Credential Received")
+        let offerCredential = try OfferCredential3_0(fromMessage: message)
+        
+        // Handle Passport Credential
+        // Make sure this Message is referring to the Passport
+        // TODO: How do we filter for different Message types like Passport vs Ticket?
+        // Process Passport VC Credential
+        guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
+            throw PassportVCThidFailedToReadFromKeychainError()
+        }
+        guard offerCredential.thid == expectedThidForPassportVCIssuance else { return nil }
+        
+        // Create Subject DID
+        guard let newPrismDID: DID = try await self.didCommAgent?.createNewPrismDID() else {
+            throw HandleOfferedCredentialCreatePrismDIDError()
+        }
+        
+        // Prepare RequestCredential with Subject DID
+        guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
+            did: newPrismDID,
+            offer: offerCredential
+        ) else {
+            throw PrepareRequestCredentialWithIssuerError()
+        }
+        
+        // Create Message from RequestCredential
+        let messageToSend: Message?
+        do {
+            messageToSend = try requestCredential.makeMessage()
+            
+        } catch {
+            throw HandleOfferedCredentialMakeMessageError()
+        }
+        guard messageToSend != nil, let madeMessage = messageToSend else {
+            throw HandleOfferedCredentialMessageNilError()
+        }
+        
+        // Send Reply Message
+        guard let sentMessage = try await self.didCommAgent?.sendMessage(message: madeMessage) else {
+            throw HandleOfferedCredentialSendMessageError()
+        }
+        
+        return requestCredential
+    }
+    
     private func handleIssuedCredential(message: Message) async throws -> Credential? {
+        print("Credential Issued")
         let issueCredential = try IssueCredential3_0(fromMessage: message)
         
         // We only want to operate on actions we have matching thids for
@@ -739,55 +802,6 @@ final class Identus: ObservableObject {
             }
         }
         throw HandleIssuedCredentialError()
-    }
-    
-    
-    private func handleOfferedCredential(message: Message) async throws -> RequestCredential3_0? {
-        print("Offer Credential Received")
-        let offerCredential = try OfferCredential3_0(fromMessage: message)
-        
-        // Process Passport VC Credential
-        guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
-            return nil
-        }
-        if offerCredential.thid == expectedThidForPassportVCIssuance {
-            
-            do {
-                guard let newPrismDID = try await self.didCommAgent?.createNewPrismDID() else {
-                    print("Did not create new did")
-                    return nil
-                }
-
-                guard let requestCredential = try await self.didCommAgent?.prepareRequestCredentialWithIssuer(
-                    did: newPrismDID,
-                    offer: offerCredential
-                ) else {
-                    throw PrepareRequestCredentialWithIssuerError()
-                }
-                print("OfferCredential: RequestCredential \(requestCredential)")
-                
-                let messageToSend = try requestCredential.makeMessage()
-                print("OfferCredential: MessageToSend \(messageToSend)")
-                
-                Task { @MainActor in
-                    do {
-                        if let sentMessage = try await self.didCommAgent?.sendMessage(message: messageToSend) {
-                            print(sentMessage)
-                            return requestCredential
-                        }
-                    } catch {
-                        print("OfferCredential: Message Send Failed \(error)")
-                        
-                    }
-                    throw HandleOfferedCredentialError()
-                }
-                
-            } catch {
-                print(error)
-                throw HandleOfferedCredentialError()
-            }
-        }
-        throw HandleOfferedCredentialError()
     }
     
     private func handleRequestPresentation(message: Message) async throws -> Presentation? {
