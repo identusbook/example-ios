@@ -51,6 +51,8 @@ class RegisterViewModel: ObservableObject {
                 print("Issuer DID is not yet Published!")
                 throw RegisterVerifyIssuerDIDIsPublishedError()
             }
+            
+            // TODO: why does this fail?
             // Get Passport SchemaId
             guard let passportSchemaId = Identus.shared.readPassportSchemaIdFromKeychain() else {
                 print("Could not read Passport Schema ID from keychain!")
