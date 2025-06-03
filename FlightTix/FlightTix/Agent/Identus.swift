@@ -33,6 +33,7 @@ final class Identus: ObservableObject {
     final class CredentialNotFoundError: Error {}
     final class PrepareRequestCredentialWithIssuerError: Error {}
     final class HandlePresentationFailedError: Error {}
+    final class CheckForIssuerDIDPublishedFailed: Error {}
     
     final class HandleIssuedCredentialError: Error {}
     final class HandleOfferedCredentialError: Error {}
@@ -44,6 +45,8 @@ final class Identus: ObservableObject {
     final class IssuerDIDFailedToSaveToKeychainError: Error {}
     final class IssuerDIDKeychainKeyNotPresentError: Error {}
     final class IssuerDIDFailedToDeleteFromKeychainError: Error {}
+    
+    final class PollDIDPublicationStatusPublishedTimeoutError: Error {}
     
     final class ProofRequestNotCreatedError: Error {}
     
@@ -401,6 +404,17 @@ final class Identus: ObservableObject {
                     throw error
                 }
                 
+                do {
+                    // Wait for Issuer DID to be published before moving on
+                    // This takes a while but not much will work without this so worth the wait
+                    // Only happens in a clean cold start
+                    try await self.pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
+                    
+                } catch {
+                    throw CheckForIssuerDIDPublishedFailed()
+                }
+                
+                
             } catch {
                 throw error
             }
@@ -447,6 +461,21 @@ final class Identus: ObservableObject {
             throw error
         }
         throw IssuerDIDNotPublishedError()
+    }
+    
+    func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
+        let interval = 1.0
+        while true {
+            try Task.checkCancellation()
+            
+            let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
+            print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
+            if isPublished {
+                print("Issuer DID is published, stopping polling.")
+                return
+            }
+            try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+        }
     }
     
     public func didShortForm(from longFormDID: String) async throws -> DID? {
@@ -662,7 +691,7 @@ final class Identus: ObservableObject {
                             }
                         }
                         
-                        print(message.createdTime)
+                        print("Message CreatedTime: \(message.createdTime)")
                         
                         switch msgType {
                         case .didcommBasicMessage,
@@ -899,11 +928,12 @@ final class Identus: ObservableObject {
             let createdSchema = try await networkActor.cloudAgent.createPassportSchema(schema: passportSchema)
             if let schemaId = createdSchema?.guid {
                 print("Passport Schema Created with ID: \(String(describing: schemaId))")
-                guard storePassportSchemaIdInKeychain(id: schemaId) else { throw SchemaIdFailedToSaveToKeychainError() }
+                guard storePassportSchemaIdInKeychain(id: schemaId) else {
+                    throw SchemaIdFailedToSaveToKeychainError() }
             }
             
         } catch {
-            throw error
+            throw CreateSchemaError()
         }
     }
     
