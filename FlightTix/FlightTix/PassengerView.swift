@@ -50,7 +50,7 @@ struct PassengerView: View {
                     }
                     .padding(.trailing, 24)
                     .fullScreenCover(isPresented: $presentingProfile, onDismiss: didDismiss, content: {
-                        Profile()
+                        Profile(onClose: {})
                     })
                     
                 }
