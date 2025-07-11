@@ -1017,10 +1017,10 @@ final class Identus: ObservableObject {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
             guard let existingSchema = try await networkActor.cloudAgent.getPassportSchemaByGuid(guid: guid) else { return nil }
+            return existingSchema
         } catch {
             throw error
         }
-        return nil
     }
     
     private func getTicketSchemaByGuid(guid: String) async throws -> TicketSchema? {
