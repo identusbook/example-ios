@@ -279,6 +279,11 @@ final class Identus: ObservableObject {
         }
     }
     
+    public func stop() async throws {
+        try await didCommAgent?.stop()
+        print("DidcommAgent stopped")
+    }
+    
     /// MARK - CONNECTIONS
     
     /// If no connection exists between the EdgeAgent and the Cloud-Agent, create one
@@ -408,7 +413,7 @@ final class Identus: ObservableObject {
                     // Wait for Issuer DID to be published before moving on
                     // This takes a while but not much will work without this so worth the wait
                     // Only happens in a clean cold start
-                    try await self.pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
+                    try await self.pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
                     
                 } catch {
                     throw CheckForIssuerDIDPublishedFailed()
@@ -463,19 +468,39 @@ final class Identus: ObservableObject {
         throw IssuerDIDNotPublishedError()
     }
     
-    func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
-        let interval = 1.0
-        while true {
-            try Task.checkCancellation()
-            
-            let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
-            print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
-            if isPublished {
-                print("Issuer DID is published, stopping polling.")
-                return
+    func pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: String) async throws {
+        
+        var checkIssuerStatusTask: Task<Void, Error>? = nil
+        
+        func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
+            let interval = 1.0
+            while true {
+                try Task.checkCancellation()
+                
+                let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
+                print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
+                if isPublished {
+                    print("Issuer DID is published, stopping polling.")
+                    stopCheckingStatus()
+                    return
+                }
+                try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
             }
-            try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
         }
+        
+        func startCheckingForStatus(shortOrLongFormDID: String) {
+            checkIssuerStatusTask = Task.detached {
+                try await pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: shortOrLongFormDID)
+            }
+        }
+        
+        func stopCheckingStatus() {
+            checkIssuerStatusTask?.cancel()
+            checkIssuerStatusTask = nil
+        }
+        
+        // Start Polling for Issuer Status
+        startCheckingForStatus(shortOrLongFormDID: shortOrLongFormDID)
     }
     
     public func didShortForm(from longFormDID: String) async throws -> DID? {
