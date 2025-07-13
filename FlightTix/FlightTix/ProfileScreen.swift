@@ -1,5 +1,5 @@
 //
-//  Profile.swift
+//  ProfileScreen.swift
 //  FlightTix
 //
 //  Created by Jon Bauer on 11/9/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Profile: View {
+struct ProfileScreen: View {
     
     @Environment(\.dismiss) private var dismiss
     
@@ -185,6 +185,6 @@ struct Profile: View {
     }
 }
 
-#Preview {
-    Profile(traveller: nil, onClose: {}, model: ProfileViewModel())
-}
+//#Preview {
+//    Profile(traveller: nil, onClose: {}, model: ProfileViewModel())
+//}
