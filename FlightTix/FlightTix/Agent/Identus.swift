@@ -9,6 +9,10 @@ import Combine
 import Foundation
 import EdgeAgentSDK
 import KeychainSwift
+import Domain
+import JSONWebKey
+import JSONWebSignature
+import Core
 
 final class Identus: ObservableObject {
     
@@ -170,8 +174,11 @@ final class Identus: ObservableObject {
             
             // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
+            
             // Publish Schemas and store SchemaIds for later reference
             try await createPassportSchemaIfNotExists()
+            // TODO
+            //try await createTicketSchemaIfNotExists()
         } catch {
             throw error
         }
@@ -279,6 +286,11 @@ final class Identus: ObservableObject {
         }
     }
     
+    public func stop() async throws {
+        try await didCommAgent?.stop()
+        print("DidcommAgent stopped")
+    }
+    
     /// MARK - CONNECTIONS
     
     /// If no connection exists between the EdgeAgent and the Cloud-Agent, create one
@@ -349,6 +361,12 @@ final class Identus: ObservableObject {
         return keychain.set(encodedDID, forKey: cloudAgentIssuerDIDKeychainKey)
     }
     
+    public func storeIssuerDIDInKeychain(shortFormDID: String) -> Bool {
+        let keychain = KeychainSwift()
+        let encodedDID = shortFormDID.encodeBase64()
+        return keychain.set(encodedDID, forKey: cloudAgentIssuerDIDKeychainKey)
+    }
+    
     public func readIssuerDIDFromKeychain() -> String? {
         let keychain = KeychainSwift()
         guard let encodedIssuerDID = keychain.get(cloudAgentIssuerDIDKeychainKey), let decodedIssuerDID = encodedIssuerDID.decodeBase64() else { return nil }
@@ -377,10 +395,26 @@ final class Identus: ObservableObject {
         // For this limited example, we are going to assume that there is only one DID on the Cloud-Agent at a time, and that this is the issuer DID
         // We will only attempt to create an Issuer DID if there is no DID present on the Cloud-Agent
         do {
+            // TODO: Maybe we should make this more accurate, and look for a whitelist of known Issuer DIDs?
             let didsOnCloudAgent = try await Identus.shared.getDIDsOnCloudAgent()
             guard didsOnCloudAgent.contents.isEmpty else {
                 // We already have an Issuer DID on Cloud Agent, do nothing
+                // note that we will not have access to the long form since the Issuer is already published
                 print("Cloud-Agent Issuer DID already exists.")
+
+                let first = didsOnCloudAgent.contents.first!
+                
+                guard let shortFormDid = first?.did else {
+                    print("Could not get ShortForm DID for Cloud-Agent Issuer DID")
+                    return
+                }
+
+                //Use this Issuer DID
+                guard storeIssuerDIDInKeychain(shortFormDID: shortFormDid) else {
+                    print("Could not store Cloud-Agent Issuer DID in keychain")
+                    throw IssuerDIDFailedToSaveToKeychainError()
+                }
+                
                 return
             }
             
@@ -408,7 +442,7 @@ final class Identus: ObservableObject {
                     // Wait for Issuer DID to be published before moving on
                     // This takes a while but not much will work without this so worth the wait
                     // Only happens in a clean cold start
-                    try await self.pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
+                    try await self.pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
                     
                 } catch {
                     throw CheckForIssuerDIDPublishedFailed()
@@ -463,19 +497,39 @@ final class Identus: ObservableObject {
         throw IssuerDIDNotPublishedError()
     }
     
-    func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
-        let interval = 1.0
-        while true {
-            try Task.checkCancellation()
-            
-            let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
-            print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
-            if isPublished {
-                print("Issuer DID is published, stopping polling.")
-                return
+    func pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: String) async throws {
+        
+        var checkIssuerStatusTask: Task<Void, Error>? = nil
+        
+        func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
+            let interval = 1.0
+            while true {
+                try Task.checkCancellation()
+                
+                let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
+                print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
+                if isPublished {
+                    print("Issuer DID is published, stopping polling.")
+                    stopCheckingStatus()
+                    return
+                }
+                try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
             }
-            try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
         }
+        
+        func startCheckingForStatus(shortOrLongFormDID: String) {
+            checkIssuerStatusTask = Task.detached {
+                try await pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: shortOrLongFormDID)
+            }
+        }
+        
+        func stopCheckingStatus() {
+            checkIssuerStatusTask?.cancel()
+            checkIssuerStatusTask = nil
+        }
+        
+        // Start Polling for Issuer Status
+        startCheckingForStatus(shortOrLongFormDID: shortOrLongFormDID)
     }
     
     public func didShortForm(from longFormDID: String) async throws -> DID? {
@@ -567,6 +621,34 @@ final class Identus: ObservableObject {
         .store(in: &credentialCancellables)
         
         //return credentials ?? []
+    }
+    
+    func loadVerifiableCredentials() async throws -> [Credential] {
+        try await withCheckedThrowingContinuation { continuation in
+            var cancellable: AnyCancellable?
+
+            cancellable = self.didCommAgent?.edgeAgent.verifiableCredentials()
+                .replaceEmpty(with: []) // emits an empty array if no value
+                .first()
+                .sink(
+                    receiveCompletion: { completion in
+                        defer { cancellable?.cancel() }
+                        if case .failure(let error) = completion {
+                            continuation.resume(throwing: error)
+                        }
+                        // Cancel the subscription on completion
+                        cancellable?.cancel()
+                        cancellable = nil
+                    },
+                    receiveValue: { credentials in
+                        defer { cancellable?.cancel() }
+                        continuation.resume(returning: credentials)
+                        // Cancel after value is received to prevent leaks
+                        cancellable?.cancel()
+                        cancellable = nil
+                    }
+                )
+        }
     }
     
     private var credentialListCancellables = Set<AnyCancellable>()
@@ -731,7 +813,7 @@ final class Identus: ObservableObject {
                             lastProcessedMessageCreatedTime = message.createdTime
                         case .didcommRequestPresentation:
                             // A Verifier has created a Presentation Request
-                            _ = try await self.handleRequestPresentation(message: message)
+                            _ = try await self.handleRequestPresentation(message: message, ticketOnly: false)
                             lastProcessedMessageCreatedTime = message.createdTime
                         }
                         promise(.success(message))
@@ -768,7 +850,9 @@ final class Identus: ObservableObject {
         guard let expectedThidForPassportVCIssuance = self.readPassportVCThidFromKeychain() else {
             throw PassportVCThidFailedToReadFromKeychainError()
         }
-        guard offerCredential.thid == expectedThidForPassportVCIssuance else { return nil }
+        guard offerCredential.thid == expectedThidForPassportVCIssuance else {
+            return nil
+        }
         
         // Create Subject DID
         guard let newPrismDID: DID = try await self.didCommAgent?.createNewPrismDID() else {
@@ -819,9 +903,27 @@ final class Identus: ObservableObject {
         }
     }
     
-    private func handleRequestPresentation(message: Message) async throws -> Presentation? {
+    private func handleRequestPresentation(message: Message, ticketOnly: Bool) async throws -> Presentation? {
         
-        let credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }.first().await()
+        let credential: Credential?
+        
+        if ticketOnly {
+            guard let keychainTicketSchemaId = readTicketSchemaIdFromKeychain() else {
+                print("Could not Read TicketSchema ID from keychain")
+                return nil
+            }
+            do {
+                credential = try await self.fetchCredential(ofSchema: keychainTicketSchemaId)
+            } catch {
+                fatalError("Can not fetch credential")
+            }
+            
+            
+        } else {
+            credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }
+                .first()
+                .await()
+        }
         
         guard let credential else {
             print("Credential Not Found!")
@@ -845,6 +947,85 @@ final class Identus: ObservableObject {
         return presentation
     }
     
+    func fetchCredential(ofSchema schemaId: String) async throws -> Credential? {
+        
+        do {
+            let rawCredentials: [Credential] = try await loadVerifiableCredentials()
+            
+            for cred in rawCredentials {
+                
+                let jws = try JWS(jwsString: cred.id)
+                
+                // decode jws payload
+                let jsonData = jws.payload // this is already `Data` decoded from Base64URL
+                var knownSchemaId: String?
+                do {
+                    let decoder = JSONDecoder()
+                    let credential = try decoder.decode(VerifiableCredentialEnvelope.self, from: jsonData)
+                    for schema in credential.vc.credentialSchema {
+                        
+                        if let guid = extractSchemaGUID(from: schema.id) {
+                            //                                print("✅ Extracted GUID:", guid)
+                            knownSchemaId = guid
+                            break
+                        } else {
+                            print("❌ No match found")
+                        }
+                    }
+                    
+                    
+                } catch {
+                    // It's probably a Ticket then, let's do the same thing for that
+                }
+                
+                do {
+                    let decoder = JSONDecoder()
+                    let credential = try decoder.decode(TicketVerifiableCredentialEnvelope.self, from: jsonData)
+                    for schema in credential.vc.credentialSchema {
+                        
+                        if let guid = extractSchemaGUID(from: schema.id) {
+                            knownSchemaId = guid
+                            break
+                        } else {
+                            print("❌ No match found")
+                        }
+                    }
+                    
+                } catch {
+                    print("❌ Ticket Decoding failed:", error)
+                }
+                
+                if knownSchemaId == Identus.shared.readPassportSchemaIdFromKeychain() {
+                    print("THIS MUST BE THE Passport SCHEMA")
+                }
+                if knownSchemaId == Identus.shared.readTicketSchemaIdFromKeychain() {
+                    print("THIS MUST BE THE Ticket SCHEMA")
+                    return cred
+                }
+            }
+        } catch {
+            throw error
+        }
+        return nil
+    }
+
+    
+    func extractSchemaGUID(from url: String) -> String? {
+        let pattern = #"schemas/([a-f0-9\-]+)/schema"#
+        
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+        
+        let range = NSRange(url.startIndex..<url.endIndex, in: url)
+        
+        if let match = regex.firstMatch(in: url, options: [], range: range),
+           let guidRange = Range(match.range(at: 1), in: url) {
+            return String(url[guidRange])
+        }
+        
+        return nil
+    }
     
     private func connectionExists(connectionId: String, label: String?) async throws -> Bool {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
@@ -899,6 +1080,7 @@ final class Identus: ObservableObject {
         guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
             return
         }
+        // TODO: Check why this fails
 //        guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else {
 //            return
 //        }
@@ -1017,10 +1199,10 @@ final class Identus: ObservableObject {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
             guard let existingSchema = try await networkActor.cloudAgent.getPassportSchemaByGuid(guid: guid) else { return nil }
+            return existingSchema
         } catch {
             throw error
         }
-        return nil
     }
     
     private func getTicketSchemaByGuid(guid: String) async throws -> TicketSchema? {

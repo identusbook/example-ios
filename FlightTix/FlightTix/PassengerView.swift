@@ -17,7 +17,7 @@ struct PassengerView: View {
         presentingProfile = true
     }
     
-    private func didDismiss() {}
+    private func didDismiss() { presentingProfile = false; }
     
     var body: some View {
         ZStack {
@@ -50,7 +50,7 @@ struct PassengerView: View {
                     }
                     .padding(.trailing, 24)
                     .fullScreenCover(isPresented: $presentingProfile, onDismiss: didDismiss, content: {
-                        Profile()
+                        ProfileScreen(onClose: { presentingProfile = false; })
                     })
                     
                 }
