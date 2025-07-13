@@ -149,7 +149,7 @@ struct ProfileScreen: View {
                             // Wait 30 seconds for for Credential dance before trying to verify
                             try await Task.sleep(nanoseconds: 30_000_000_000)
                             
-                            // Verify: Request Proof of valid VRC VC
+                            // Verify: Request Proof of valid Ticket VC
                             _ = try await model.requestProofOfTicket()
                             
                         } catch {

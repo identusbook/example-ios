@@ -975,7 +975,7 @@ final class Identus: ObservableObject {
                     
                     
                 } catch {
-                    // It's probably a VRC then, let's do the same thing for that
+                    // It's probably a Ticket then, let's do the same thing for that
                 }
                 
                 do {
@@ -996,12 +996,9 @@ final class Identus: ObservableObject {
                 }
                 
                 if knownSchemaId == Identus.shared.readPassportSchemaIdFromKeychain() {
-                    //return AnyCredential(base: schemaId, knownType: .fpc)
                     print("THIS MUST BE THE Passport SCHEMA")
                 }
                 if knownSchemaId == Identus.shared.readTicketSchemaIdFromKeychain() {
-                    //return AnyCredential(base: schemaId, knownType: .vrc)
-                    //foundCredential = cred
                     print("THIS MUST BE THE Ticket SCHEMA")
                     return cred
                 }
