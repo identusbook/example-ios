@@ -10,10 +10,9 @@ import SwiftUI
 struct ProfileScreen: View {
     
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var model: ProfileViewModel = ProfileViewModel()
     
     @State private var profileLoaded: Bool = false
-    
-    var traveller: Traveller?
     
     private func logout() {
         dismiss()
@@ -28,12 +27,23 @@ struct ProfileScreen: View {
                 VStack {
                     Text("Profile")
                     
-                    Form {
-                        Text("Name: \(String(describing: traveller?.passport.name))")
-                        Text("DID: \(String(describing: traveller?.passport.did))")
-                        Text("Passport Number: \(String(describing: traveller?.passport.passportNumber))")
-                        Text("Birthdate: \(String(describing: traveller?.passport.dob))")
+                    if let traveller = model.traveller {
+                        Form {
+                            Text("Name: \(String(describing: traveller.passport.name))")
+                            Text("DID: \(String(describing: traveller.passport.did))")
+                            Text("Passport Number: \(String(describing: traveller.passport.passportNumber))")
+                            Text("Birthdate: \(String(describing: traveller.passport.dob))")
+                        }
+                    } else {
+                        Form {
+                            Text("Name:")
+                            Text("DID:")
+                            Text("Passport Number:")
+                            Text("Birthdate:")
+                        }
                     }
+                    
+                    
                     
                     Button  {
                         logout()
@@ -48,14 +58,17 @@ struct ProfileScreen: View {
         .onAppear() {
             // Check for Passport VC
             // Load data from Passport VC
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                profileLoaded = true
+            Task {
+                try await model.getTraveller()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    profileLoaded = true
+                }
             }
+            
         }
     }
 }
 
-#Preview {
-    ProfileScreen(traveller: nil, onClose: {})
-}
+//#Preview {
+//    ProfileScreen(traveller: nil, onClose: {})
+//}
