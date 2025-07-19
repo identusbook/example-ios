@@ -128,6 +128,6 @@ struct DevUtils: View {
     }
 }
 
-//#Preview {
-//    Profile(traveller: nil, onClose: {}, model: ProfileViewModel())
-//}
+#Preview {
+    DevUtils(model: DevUtilsModel())
+}
