@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct LoadingScreen: View {
+    
+    @ObservedObject var identusStatus = IdentusStatus.shared
+
     var body: some View {
         ZStack {
             VStack {
@@ -21,7 +24,7 @@ struct LoadingScreen: View {
                     .scaledToFit()
                     .frame(width: 200)
                     .padding(.bottom, 40)
-                ProgressView("Establishing a Connection...")
+                ProgressView(String(identusStatus.status.description))
             }
             .padding()
             

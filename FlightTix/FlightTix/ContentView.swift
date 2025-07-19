@@ -19,12 +19,26 @@ enum NavigationItem {
     case purchase
     case ticket
     case security
+    case devTools
 }
 
 enum ViewState {
     case loading
     case login
     case tabs
+}
+
+enum AppModal: Identifiable, Equatable {
+    
+    case none
+    case profile
+
+    var id: String {
+        switch self {
+        case .none: return "none"
+        case .profile: return "profile"
+        }
+    }
 }
 
 struct ContentView: View {
@@ -36,7 +50,38 @@ struct ContentView: View {
     @State private var selectedTab: NavigationItem = .purchase
     @State private var viewState: ViewState = .loading
     
+    private let identusStatus = IdentusStatus.shared
+    
     private func reloadModels() { print("reloading models...") }
+    
+    @State private var modal: AppModal?
+    
+    // Show a modal (replaces any currently showing one)
+    private func showModal(_ newModal: AppModal) {
+        if modal != newModal {
+            modal = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                modal = newModal
+            }
+        }
+    }
+    
+    // Dismiss the modal
+    private func dismissModal() {
+        modal = nil
+    }
+    
+    // Return the appropriate modal view
+    @ViewBuilder
+    private func modalView(for modal: AppModal) -> some View {
+        switch modal {
+        case .none:
+            EmptyView()
+        case .profile:
+            ProfileScreen(onClose: dismissModal)
+        }
+    }
+    
     
     var body: some View {
         
@@ -50,11 +95,9 @@ struct ContentView: View {
                         do {
                             Identus.setup(IdentusConfig()) // must call Identus.setup(IdentusConfig()) before first use
 //                             TODO: remember to wipe the Simulator to reset CoreDate because it only appends
-//                            try await Identus.shared.tearDown(); return;
-                            
                             try await Identus.shared.startUpAndConnect()
                             print(Identus.shared.status)
-                            if Identus.shared.status == "running" {
+                            if identusStatus.status == .ready {
                                 print("we should transition from LoadingScreen to Content")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                                     viewState = .tabs
@@ -87,6 +130,11 @@ struct ContentView: View {
                         Label("Airport Security", systemImage: "hand.raised.circle")
                     }
                     .tag(NavigationItem.security)
+                DevUtils()
+                    .tabItem {
+                        Label("Dev Utils", systemImage: "wrench.and.screwdriver")
+                    }
+                    .tag(NavigationItem.devTools)
             }
             .onAppear() {
                 Task {
@@ -103,6 +151,23 @@ struct ContentView: View {
                              content: {
                 RegisterScreen()
             })
+            .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.85, blendDuration: 0.25), value: modal)
+            .edgesIgnoringSafeArea(.all)
+        }
+        
+        
+        // Modal overlay
+        if let modal = modal {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { dismissModal() }
+
+            modalView(for: modal)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .move(edge: .bottom).combined(with: .opacity)
+                ))
+                .zIndex(1)
         }
     }
     
