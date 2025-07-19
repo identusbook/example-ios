@@ -37,25 +37,12 @@ class Auth: ObservableObject {
     }
     
     private func loginVCExists() async throws -> Bool {
-        // Get Credentials
-        var credentials: [Credential]?
-        do {
-            credentials = try await Identus.shared.fetchCredentials()
-        } catch {
-            print("Error fetching credentials: \(error)")
+        // Check for Passport VC
+        guard let passportSchemaID = Identus.shared.readPassportSchemaIdFromKeychain() else { return false }
+        guard let cred = try await Identus.shared.fetchCredential(ofSchema: passportSchemaID) else {
+            return false
         }
         
-        guard let credentials else { return false }
-        for credential: Credential in credentials {
-            
-            print("Credential is: \(credential)")
-            
-            // Check for a PassportVC by checking the credentialSchema
-            // if credential.verifiableCredential.credentialSchema == knownPassportVCSchemaID { return true }
-            
-            return true
-        }
-        
-        return false
+        return true
     }
 }

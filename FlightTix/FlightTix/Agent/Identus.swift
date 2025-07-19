@@ -21,10 +21,14 @@ final class Identus: ObservableObject {
     final class SeedKeychainKeyNotPresentError: Error {}
     final class SeedFailedToDeleteFromKeychainError: Error {}
     final class ConnectionFailedToDeleteFromKeychainError: Error {}
+    final class ConnectionFailedToStoreInKeychainError: Error {}
+    final class ConnectAndAcceptCloudAgentInvitationError: Error {}
     final class CredentialOfferRequestFailedError: Error {}
     final class CredentialRecordResponseFailedError: Error {}
     final class AcceptCredentialOfferFailedError: Error {}
     final class CreateIssuerDIDError: Error {}
+    final class CreateConnectionInvitationError: Error {}
+    final class AcceptConnectionInvitationError: Error {}
     final class ShortFormOfDIDFromLongFormDIDFailedError: Error {}
     final class CreateSchemaError: Error {}
     final class SchemaIdFailedToSaveToKeychainError: Error {}
@@ -38,6 +42,9 @@ final class Identus: ObservableObject {
     final class PrepareRequestCredentialWithIssuerError: Error {}
     final class HandlePresentationFailedError: Error {}
     final class CheckForIssuerDIDPublishedFailed: Error {}
+    final class RequestDIDPublicationFailed: Error {}
+    final class DIDStatusFailed: Error {}
+    final class DIDRefMatchFailed: Error {}
     
     final class HandleIssuedCredentialError: Error {}
     final class HandleOfferedCredentialError: Error {}
@@ -53,6 +60,8 @@ final class Identus: ObservableObject {
     final class PollDIDPublicationStatusPublishedTimeoutError: Error {}
     
     final class ProofRequestNotCreatedError: Error {}
+    
+    private var identusStatus = IdentusStatus.shared
     
     // Config
     let mediatorOOBURL: URL
@@ -174,11 +183,22 @@ final class Identus: ObservableObject {
             
             // Create Issuer DID on Cloud-Agent if it does not already exist
             try await createIssuerDIDOnCloudAgentIfNotExists()
+            // We still might have to wait for a new issuer to publish off the main thread or create a new function for it
+            
             
             // Publish Schemas and store SchemaIds for later reference
             try await createPassportSchemaIfNotExists()
+            
             // TODO
             //try await createTicketSchemaIfNotExists()
+            
+            print("WE SHOULD NOT REACH THIS BEFORE ISSUER IS PUBLISHED")
+            //TODO: Only set to .ready when all of these tasks are complete (We need a Task Group)
+            Task { @MainActor in
+                self.identusStatus.status = .ready
+            }
+            
+            
         } catch {
             throw error
         }
@@ -187,6 +207,9 @@ final class Identus: ObservableObject {
     
     @MainActor
     private func start() async throws {
+        Task { @MainActor in
+            self.identusStatus.status = .startingAgent
+        }
         status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
         do {
             if let seed = seedExists(key: seedKeychainKey) {
@@ -296,6 +319,10 @@ final class Identus: ObservableObject {
     /// If no connection exists between the EdgeAgent and the Cloud-Agent, create one
     private func createConnectionToCloudAgentIfNotExists() async throws {
         
+        Task { @MainActor in
+            self.identusStatus.status = .creatingConnectionToCloudAgent
+        }
+        
         do {
             // User locally stored connectionId if we have one
             if let connectionIdFromKeychain = Identus.shared.readConnectionIdFromKeychain() {
@@ -316,27 +343,18 @@ final class Identus: ObservableObject {
     private func askCloudAgentForConnectionInvitationAndAcceptIt() async throws {
         // Ask Cloud-Agent to create an Invitation and accept it
         do {
-            let invitationFromCloudAgent = try await Identus.shared.createInvitation()
-            guard let invitationFromCloudAgent else {
-                return
+            guard let invitationFromCloudAgent = try await Identus.shared.createInvitation() else {
+                throw CreateConnectionInvitationError()
             }
-            // Here we have a invitationId which is the same as the connectionId, can we rely on that being the same?
-            let invitationIdToBeAccepted = invitationFromCloudAgent.id
-            let acceptedInvitation = try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent)
-            
-            guard let acceptedInvitationIdToBeStored = acceptedInvitation?.id else {
-                return
+            guard let acceptedInvitation = try await Identus.shared.acceptDIDCommInvite(invitationFromCloudAgent: invitationFromCloudAgent) else {
+                throw AcceptConnectionInvitationError()
             }
-            
-            if invitationIdToBeAccepted == acceptedInvitationIdToBeStored {
-                // Store as connectionId
-                if !self.storeConnectionIdInKeychain(connectionId: invitationIdToBeAccepted) {
-                    print("Connection ID was not saved, and this should be a proper error, not a print statement")
-                }
+            // Store as connectionId
+            if !self.storeConnectionIdInKeychain(connectionId: acceptedInvitation.id) {
+                throw ConnectionFailedToStoreInKeychainError()
             }
-            
         } catch {
-            print(error)
+            throw ConnectAndAcceptCloudAgentInvitationError()
         }
     }
     
@@ -395,13 +413,12 @@ final class Identus: ObservableObject {
         // For this limited example, we are going to assume that there is only one DID on the Cloud-Agent at a time, and that this is the issuer DID
         // We will only attempt to create an Issuer DID if there is no DID present on the Cloud-Agent
         do {
-            // TODO: Maybe we should make this more accurate, and look for a whitelist of known Issuer DIDs?
             let didsOnCloudAgent = try await Identus.shared.getDIDsOnCloudAgent()
             guard didsOnCloudAgent.contents.isEmpty else {
                 // We already have an Issuer DID on Cloud Agent, do nothing
                 // note that we will not have access to the long form since the Issuer is already published
                 print("Cloud-Agent Issuer DID already exists.")
-
+                
                 let first = didsOnCloudAgent.contents.first!
                 
                 guard let shortFormDid = first?.did else {
@@ -415,10 +432,18 @@ final class Identus: ObservableObject {
                     throw IssuerDIDFailedToSaveToKeychainError()
                 }
                 
+                Task { @MainActor in
+                    self.identusStatus.status = .issuerDIDAlreadyExists
+                }
+                
                 return
             }
             
             do {
+                
+                Task { @MainActor in
+                    self.identusStatus.status = .creatingIssuerDID
+                }
                 // Create an Issuer DID on the Cloud-Agent and save it for later
                 let createIssuerDIDRequest = CreateDIDRequest(documentTemplate: DocumentTemplate(publicKeys: [
                     DIDPublicKey(id: "auth-1", purpose: "authentication"),
@@ -431,17 +456,16 @@ final class Identus: ObservableObject {
                 }
                 // Request new Issuer DID to be published - This will Publish asynchronously in the Cloud-Agent.  Make sure it is PUBLISHED before use
                 do {
-                    guard try await requestDIDPublication(longFormDID: createDIDResponse.longFormDid) else {
-                        throw RequestIssuerDIDToBePublishedError()
-                    }
+                    try await requestDIDPublication(longFormDID: createDIDResponse.longFormDid)
                 } catch {
-                    throw error
+                    throw RequestIssuerDIDToBePublishedError()
                 }
                 
                 do {
                     // Wait for Issuer DID to be published before moving on
                     // This takes a while but not much will work without this so worth the wait
                     // Only happens in a clean cold start
+                    
                     try await self.pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: createDIDResponse.longFormDid)
                     
                 } catch {
@@ -458,30 +482,31 @@ final class Identus: ObservableObject {
         }
     }
     
-    private func requestDIDPublication(longFormDID: String) async throws -> Bool {
+    private func requestDIDPublication(longFormDID: String) async throws {
         // Get ShortForm of DID
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            if let didStatus = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: longFormDID) {
-                return try await requestDIDPublication(shortFormDID: didStatus.did)
+            guard let didStatus = try await networkActor.cloudAgent.didStatus(shortOrLongFormDID: longFormDID) else {
+                throw DIDStatusFailed()
             }
+            try await requestDIDPublication(shortFormDID: didStatus.did)
         } catch {
             throw error
         }
-        return false
     }
     
-    private func requestDIDPublication(shortFormDID: String) async throws -> Bool {
+    private func requestDIDPublication(shortFormDID: String) async throws {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
             guard let scheduledOperation = try await networkActor.cloudAgent.requestDIDPublication(request: PublishDIDRequest(didRef: shortFormDID)) else {
-                return false
+                throw RequestDIDPublicationFailed()
             }
-            if scheduledOperation.scheduledOperation.didRef == shortFormDID { return true }
+            guard scheduledOperation.scheduledOperation.didRef == shortFormDID else {
+                throw DIDRefMatchFailed()
+            }
         } catch {
             throw error
         }
-        return false
     }
     
     public func verifyIssuerDIDIsPublished(shortOrLongFormDID: String) async throws -> Bool {
@@ -499,35 +524,44 @@ final class Identus: ObservableObject {
     
     func pollIssuerCheckDIDStatusPublished(shortOrLongFormDID: String) async throws {
         
+        Task { @MainActor in
+            self.identusStatus.status = .publishingIssuerDID
+        }
+        
         var checkIssuerStatusTask: Task<Void, Error>? = nil
         
         func pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: String) async throws {
             let interval = 1.0
             while true {
-                try Task.checkCancellation()
+                do {
+                    // check if cancelled, will throw when cancelled
+                    try Task.checkCancellation()
+                } catch {
+                    checkIssuerStatusTask = nil
+                    return
+                }
                 
                 let isPublished = try await self.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortOrLongFormDID)
                 print("Is Issuer DID Published yet?: \(isPublished ? "Yes" : "No")")
                 if isPublished {
                     print("Issuer DID is published, stopping polling.")
-                    stopCheckingStatus()
-                    return
+                    Task { @MainActor in
+                        self.identusStatus.status = .issuerDIDPublished
+                    }
+                    
+                    checkIssuerStatusTask?.cancel()
                 }
                 try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
             }
         }
         
         func startCheckingForStatus(shortOrLongFormDID: String) {
-            checkIssuerStatusTask = Task.detached {
+            // This could be Task.detached but we want to block for this important task
+            checkIssuerStatusTask = Task { @MainActor in // This ensures a blocking until Published
                 try await pollIssuerDIDPublicationStatusPublished(shortOrLongFormDID: shortOrLongFormDID)
             }
         }
-        
-        func stopCheckingStatus() {
-            checkIssuerStatusTask?.cancel()
-            checkIssuerStatusTask = nil
-        }
-        
+                
         // Start Polling for Issuer Status
         startCheckingForStatus(shortOrLongFormDID: shortOrLongFormDID)
     }
@@ -746,6 +780,11 @@ final class Identus: ObservableObject {
     
     @MainActor
     private func startMessageStream() {
+        
+        Task { @MainActor in
+            self.identusStatus.status = .startingDIDCommMessageListener
+        }
+        
         
         var messageIndex: Int = 0
         var lastProcessedMessageCreatedTime: Date?
@@ -997,6 +1036,7 @@ final class Identus: ObservableObject {
                 
                 if knownSchemaId == Identus.shared.readPassportSchemaIdFromKeychain() {
                     print("THIS MUST BE THE Passport SCHEMA")
+                    return cred
                 }
                 if knownSchemaId == Identus.shared.readTicketSchemaIdFromKeychain() {
                     print("THIS MUST BE THE Ticket SCHEMA")
@@ -1060,6 +1100,10 @@ final class Identus: ObservableObject {
     
     private func createPassportSchemaIfNotExists() async throws {
         
+        Task { @MainActor in
+            self.identusStatus.status = .checkingPassportSchema
+        }
+        
         //TODO: Check to see if Passport Schema already exists on Cloud Agent
         // Only if not, run this code
         guard let savedPassportSchemaGuid = readPassportSchemaIdFromKeychain() else {
@@ -1080,10 +1124,14 @@ final class Identus: ObservableObject {
         guard let shortFormIssuerDID = try await Identus.shared.didShortForm(from: issuerDID) else {
             return
         }
-        // TODO: Check why this fails
+//        // TODO: Check why this fails
 //        guard try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortFormIssuerDID.string) else {
 //            return
 //        }
+        
+        Task { @MainActor in
+            self.identusStatus.status = .createdPassportSchema
+        }
         
         let passportSchema = PassportSchema(guid: nil,
                                            name: "passport",
@@ -1112,6 +1160,10 @@ final class Identus: ObservableObject {
                 print("Passport Schema Created with ID: \(String(describing: schemaId))")
                 guard storePassportSchemaIdInKeychain(id: schemaId) else {
                     throw SchemaIdFailedToSaveToKeychainError() }
+            }
+            
+            Task { @MainActor in
+                self.identusStatus.status = .createdPassportSchema
             }
             
         } catch {
