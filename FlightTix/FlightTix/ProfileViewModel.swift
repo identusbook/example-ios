@@ -36,10 +36,10 @@ class ProfileViewModel: ObservableObject {
         }
         
         let claimValues = populateProfileClaims(claims: cred.claims)
-        
+                
         let traveller = Traveller(
             passport: Passport(name: claimValues.name ?? "",
-                               did: claimValues.did ?? "",
+                               did: cred.subject ?? "",
                                passportNumber: claimValues.passportNumber ?? "",
                                dob: Date().stringToDate(iso8601String: claimValues.dob ?? "") ?? Date(),
                                dateOfIssuance: Date().stringToDate(iso8601String: claimValues.dateOfIssuance ?? "") ?? Date())
@@ -47,9 +47,8 @@ class ProfileViewModel: ObservableObject {
         return traveller
     }
     
-    private func populateProfileClaims(claims: [Claim]) -> (name: String?, passportNumber: String?, did: String?, dob: String?, dateOfIssuance: String?) {
+    private func populateProfileClaims(claims: [Claim]) -> (name: String?, passportNumber: String?, dob: String?, dateOfIssuance: String?) {
         var name: String?
-        var did: String?
         var passportNumber: String?
         var dob: String?
         var dateOfIssuance: String?
@@ -57,24 +56,19 @@ class ProfileViewModel: ObservableObject {
             if claim.key == "name" {
                 name = claim.getValueAsString()
             }
-            if claim.key == "did" {
-                did = claim.getValueAsString()
-            }
             if claim.key == "passportNumber" {
                 passportNumber = claim.getValueAsString()
             }
             if claim.key == "dob" {
                 let dobString = claim.getValueAsString()
-                let prettyDOB = DateStuff.displayISODateAsString(dobString, showTime: false)
-                dob = prettyDOB
+                dob = dobString
             }
             if claim.key == "dateOfIssuance" {
-                //dateOfIssuance = claim.getValueAsString()
                 let doiString = claim.getValueAsString()
                 let prettyDOi = DateStuff.displayISODateAsString(doiString, showTime: false)
                 dateOfIssuance = prettyDOi
             }
         }
-        return (name, passportNumber, did, dob, dateOfIssuance)
+        return (name, passportNumber, dob, dateOfIssuance)
     }
 }

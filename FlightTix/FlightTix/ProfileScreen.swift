@@ -22,29 +22,25 @@ struct ProfileScreen: View {
     var body: some View {
         ZStack {
             if !profileLoaded {
-                Text("Loading Profile...")
+                Text("Loading Passport Details...")
             } else {
                 VStack {
-                    Text("Profile")
+                    Text("Passport Details")
                     
                     if let traveller = model.traveller {
                         Form {
-                            Text("Name: \(String(describing: traveller.passport.name))")
-                            Text("DID: \(String(describing: traveller.passport.did))")
-                            Text("Passport Number: \(String(describing: traveller.passport.passportNumber))")
-                            Text("Birthdate: \(String(describing: traveller.passport.dob))")
+                            Text("Name: \(traveller.passport.name)")
+                            Text("Passport Number: \(traveller.passport.passportNumber)")
+                            Text("Birthdate: \(DateStuff.displayISODateAsString(traveller.passport.dob.iso8601String(), showTime: false))")
                         }
                     } else {
                         Form {
                             Text("Name:")
-                            Text("DID:")
                             Text("Passport Number:")
                             Text("Birthdate:")
                         }
                     }
-                    
-                    
-                    
+
                     Button  {
                         logout()
                     } label: {
@@ -64,7 +60,6 @@ struct ProfileScreen: View {
                     profileLoaded = true
                 }
             }
-            
         }
     }
 }
