@@ -9,14 +9,6 @@ import Foundation
 
 class TicketViewModel: ObservableObject {
     
-    public func availableFlights() async throws -> [Flight] {
-        return [
-                Flight(departure: "ATL", arrival: "SCL", price: 500.0),
-                Flight(departure: "SFO", arrival: "TYO", price: 800.0),
-                Flight(departure: "LAS", arrival: "VIE", price: 700.0),
-        ]
-    }
-    
     public func issueTicket(for flight: Flight) async throws {
         do {
             

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Flight: Codable, Sendable {
+public struct Flight: Hashable, Identifiable, Codable, Sendable {
     public var id: UUID = UUID()
     public var departure: String
     public var arrival: String

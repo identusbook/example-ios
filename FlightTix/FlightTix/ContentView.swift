@@ -113,7 +113,7 @@ struct ContentView: View {
             RegisterScreen()
         case .tabs:
             TabView(selection: $selectedTab) {
-                PassengerView()
+                PurchaseView()
                     .tabItem {
                         Label("Purchase", systemImage: "airplane")
                     }
