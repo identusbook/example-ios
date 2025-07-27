@@ -28,7 +28,7 @@ class PurchaseViewModel: ObservableObject {
             
             print("Request Credential Offer for Ticket")
             // TODO:  Should we do this here? Probably on startup?
-            //try await Identus.shared.createTicketSchemaIfNotExists()
+            try await Identus.shared.createTicketSchemaIfNotExists()
             
             // Get IssuerDID and verify it's been published.
             guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else {
@@ -63,7 +63,10 @@ class PurchaseViewModel: ObservableObject {
                 credentialFormat: "JWT",
                 claims: TicketClaimsRequest(name: flight.id.uuidString,
                                             dateOfIssuance: Date.now.iso8601String(),
-                                            flight: flight),
+                                            flightId: flight.id.uuidString,
+                                            price: flight.price,
+                                            departure: flight.departure,
+                                            arrival: flight.arrival),
                 automaticIssuance: true,
                 issuingDID: shortFormIssuerDID.string,
                 connectionId: currentConnectionId

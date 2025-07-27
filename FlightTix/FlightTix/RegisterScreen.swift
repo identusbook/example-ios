@@ -14,6 +14,7 @@ struct RegisterScreen: View {
     final class RegisterFormVerifyCredentialError: Error {}
     
     @Environment(\.dismiss) private var dismiss
+    var onClose: () -> Void
     
     @StateObject var model: RegisterViewModel = RegisterViewModel()
     
@@ -76,6 +77,12 @@ struct RegisterScreen: View {
                     }
                     
                 }
+                
+                Button  {
+                    onClose()
+                } label: {
+                    Text("Close")
+                }
             }
         }
         .onAppear {
@@ -85,5 +92,5 @@ struct RegisterScreen: View {
 }
 
 #Preview {
-    RegisterScreen()
+    RegisterScreen(onClose: {})
 }

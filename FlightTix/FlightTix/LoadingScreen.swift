@@ -10,6 +10,8 @@ import SwiftUI
 struct LoadingScreen: View {
     
     @ObservedObject var identusStatus = IdentusStatus.shared
+    
+    @StateObject var model: DevUtilsModel = .init()
 
     var body: some View {
         ZStack {
@@ -25,8 +27,22 @@ struct LoadingScreen: View {
                     .frame(width: 200)
                     .padding(.bottom, 40)
                 ProgressView(String(identusStatus.status.description))
+                
+                
+                Button {
+                    Task {
+                        try await model.tearDown()
+                        try await model.stop()
+                    }
+                } label: {
+                    Text("Tear Down and Stop")
+                }
+                .buttonStyle(.bordered)
+
             }
             .padding()
+            
+            
             
         }
         .edgesIgnoringSafeArea(.all)

@@ -41,7 +41,10 @@ struct TicketSchemaData: Codable {
 struct TicketProperties: Codable {
     let name: PropertyDetails
     let dateOfIssuance: PropertyDetails
-    let flight: PropertyDetails
+    let price: PropertyDetails
+    let departure: PropertyDetails
+    let arrival: PropertyDetails
+    let flightId: PropertyDetails
 }
 
 struct PropertyDetails: Codable {
