@@ -61,6 +61,9 @@ final class Identus: ObservableObject {
     
     final class ProofRequestNotCreatedError: Error {}
     
+    final class TicketSchemaNotCreatedError: Error {}
+    final class TicketSchemaNotFoundInCloudAgentError: Error {}
+    
     private var identusStatus = IdentusStatus.shared
     
     // Config
@@ -301,6 +304,16 @@ final class Identus: ObservableObject {
             if readPassportSchemaIdFromKeychain() != nil {
                 guard deletePassportSchemaIdFromKeychain() else { throw PassportSchemaIdFailedToDeleteFromKeychainError() }
                 print("Deleted PassportSchemaId from Keychain")
+            }
+            
+            if readTicketVCThidFromKeychain() != nil {
+                guard deleteTicketVCThidFromKeychain() else { throw TicketVCThidFailedToDeleteFromKeychainError() }
+                print("Deleted TicketVCThid from Keychain")
+            }
+            
+            if readTicketSchemaIdFromKeychain() != nil {
+                guard deleteTicketSchemaIdFromKeychain() else { throw TicketSchemaIdFailedToDeleteFromKeychainError() }
+                print("Deleted TicketSchemaId from Keychain")
             }
             
             print("Identus has been torn down")
@@ -1188,7 +1201,7 @@ final class Identus: ObservableObject {
         return keychain.delete(ticketSchemaIdKeychainKey) ? true : false
     }
     
-    private func createTicketSchemaIfNotExists() async throws {
+    public func createTicketSchemaIfNotExists() async throws {
         
         //TODO: Check to see if Ticket Schema already exists on Cloud Agent
         // Only if not, run this code
@@ -1228,9 +1241,12 @@ final class Identus: ObservableObject {
                                                           properties: TicketProperties(
                                                             name: PropertyDetails(type: "string", format: nil),
                                                             dateOfIssuance: PropertyDetails(type: "string", format: "date-time"),
-                                                            flight: PropertyDetails(type: "string", format: nil)
+                                                            price: PropertyDetails(type: "number", format: nil),
+                                                            departure: PropertyDetails(type: "string", format: nil),
+                                                            arrival: PropertyDetails(type: "string", format: nil),
+                                                            flightId: PropertyDetails(type: "string", format: nil)
                                                           ),
-                                                          required: ["name", "dateOfIssuance", "dob"],
+                                                          required: ["name", "dateOfIssuance"],
                                                           additionalProperties: true))
         
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
@@ -1242,7 +1258,7 @@ final class Identus: ObservableObject {
             }
             
         } catch {
-            throw error
+            throw TicketSchemaNotCreatedError()
         }
     }
     
@@ -1261,9 +1277,11 @@ final class Identus: ObservableObject {
         
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {
-            guard let existingSchema = try await networkActor.cloudAgent.getTicketSchemaByGuid(guid: guid) else { return nil }
+            guard let existingSchema = try await networkActor.cloudAgent.getTicketSchemaByGuid(guid: guid) else {
+                return nil
+            }
         } catch {
-            throw error
+            throw TicketSchemaNotFoundInCloudAgentError()
         }
         return nil
     }

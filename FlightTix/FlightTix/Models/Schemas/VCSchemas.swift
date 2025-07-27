@@ -93,8 +93,10 @@ struct TicketVerifiableCredential: Decodable {
 
 struct TicketCredentialSubjectContainer: Decodable {
     let id: String
-    let flight: String
+    let flightId: String
     let price: Double
+    let departure: String
+    let arrival: String
     //let traveller: Traveller
 }
 

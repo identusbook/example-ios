@@ -9,14 +9,6 @@ import Foundation
 
 class TicketViewModel: ObservableObject {
     
-    public func availableFlights() async throws -> [Flight] {
-        return [
-                Flight(departure: "ATL", arrival: "SCL", price: 500.0),
-                Flight(departure: "SFO", arrival: "TYO", price: 800.0),
-                Flight(departure: "LAS", arrival: "VIE", price: 700.0),
-        ]
-    }
-    
     public func issueTicket(for flight: Flight) async throws {
         do {
             
@@ -47,8 +39,11 @@ class TicketViewModel: ObservableObject {
                     schemaId: "http://localhost:8085/schema-registry/schemas/\(ticketSchemaId)/schema", // TODO: make this baseURL dynamic.  it's very important to be THIS baseURL, Cloud Agent can't dereference it from Docker if's different.  This should only be this way for dev.  Prod needs a real live URL
                     credentialFormat: "JWT",
                     claims: TicketClaimsRequest(name: flight.id.uuidString,
-                                                  dateOfIssuance: Date.now.iso8601String(),
-                                                flight: Flight(departure: "SFO", arrival: "TYO", price: 700.0)),
+                                                dateOfIssuance: Date.now.iso8601String(),
+                                                flightId: flight.id.uuidString,
+                                                price: flight.price,
+                                                departure: flight.departure,
+                                                arrival: flight.arrival),
                     automaticIssuance: true,
                     issuingDID: shortFormIssuerDID.string,
                     connectionId: currentConnectionId

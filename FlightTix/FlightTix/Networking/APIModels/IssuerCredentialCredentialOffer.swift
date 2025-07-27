@@ -63,7 +63,10 @@ struct PassportClaimsRequest: Codable, Sendable {
 struct TicketClaimsRequest: Codable, Sendable {
     let name: String
     let dateOfIssuance: String
-    let flight: Flight
+    let flightId: String
+    let price: Double
+    let departure: String
+    let arrival: String
 }
 
 struct CredentialOfferErrorResponseAPIModel: Decodable, Sendable {
