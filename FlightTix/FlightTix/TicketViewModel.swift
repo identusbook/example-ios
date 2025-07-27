@@ -6,8 +6,15 @@
 //
 
 import Foundation
+import EdgeAgentSDK
 
 class TicketViewModel: ObservableObject {
+    
+    final class CanNotReadTicketSchemaError: Error {}
+    final class CanNotFindTicketCredentialError: Error {}
+    final class CanNotGetTicketDetailsError: Error {}
+    
+    @Published var ticket: Ticket?
     
     public func issueTicket(for flight: Flight) async throws {
         do {
@@ -61,15 +68,61 @@ class TicketViewModel: ObservableObject {
             print(error)
         }
     }
+
+    func getTicket() async throws {
+        let ticket = try await getTicketDetails()
+        Task { @MainActor in
+            self.ticket = ticket
+        }
+    }
     
-    public func showCredentials() async throws {
-        do {
-            try await Identus.shared.listCredentials()
-            
-        } catch {
-            
+    func getTicketDetails() async throws -> Ticket {
+        guard let ticketSchemaID = Identus.shared.readTicketSchemaIdFromKeychain() else {
+            throw CanNotReadTicketSchemaError()
+        }
+        guard let cred = try await Identus.shared.fetchCredential(ofSchema: ticketSchemaID) else {
+            throw CanNotFindTicketCredentialError()
         }
         
+        let claimValues = populateTicketClaims(claims: cred.claims)
         
+        let flight: Flight = Flight(
+            departure: claimValues.departure ?? "",
+            arrival: claimValues.arrival ?? "",
+            price: 0.0
+        )
+        
+        let ticket: Ticket = Ticket(price: 0.0,
+                            departure: claimValues.departure ?? "",
+                            arrival: claimValues.arrival ?? "")
+        return ticket
+    }
+    
+    private func populateTicketClaims(claims: [Claim]) -> (flightId: String?, price: String?, departure: String?, arrival: String?, dateOfIssuance: String?) {
+        var flightId: String?
+        var price: String?
+        var departure: String?
+        var arrival: String?
+        var dateOfIssuance: String?
+        for claim in claims {
+            if claim.key == "flightId" {
+                flightId = claim.getValueAsString()
+            }
+            if claim.key == "price" {
+                price = claim.getValueAsString()
+            }
+            if claim.key == "departure" {
+                price = claim.getValueAsString()
+            }
+            if claim.key == "arrival" {
+                price = claim.getValueAsString()
+            }
+            if claim.key == "dateOfIssuance" {
+                let doiString = claim.getValueAsString()
+                let prettyDOi = DateStuff.displayISODateAsString(doiString, showTime: false)
+                dateOfIssuance = prettyDOi
+            }
+        }
+        return (flightId, price, departure, arrival, dateOfIssuance)
     }
 }
