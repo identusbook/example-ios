@@ -33,10 +33,12 @@ final class Identus: ObservableObject {
     final class CreateSchemaError: Error {}
     final class SchemaIdFailedToSaveToKeychainError: Error {}
     final class PassportSchemaIdFailedToDeleteFromKeychainError: Error {}
+    final class TicketSchemaIdFailedToDeleteFromKeychainError: Error {}
     final class RequestIssuerDIDToBePublishedError: Error {}
     final class IssuerDIDNotPublishedError: Error {}
     final class PassportVCThidFailedToReadFromKeychainError: Error {}
     final class PassportVCThidFailedToDeleteFromKeychainError: Error {}
+    final class TicketVCThidFailedToDeleteFromKeychainError: Error {}
     final class PassportFailedToReadFromKeychainError: Error {}
     final class CredentialNotFoundError: Error {}
     final class PrepareRequestCredentialWithIssuerError: Error {}
