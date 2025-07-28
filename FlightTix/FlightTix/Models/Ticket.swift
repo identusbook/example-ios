@@ -8,8 +8,7 @@
 import Foundation
 
 struct Ticket {
-    let id: UUID = UUID()
-    let flight: Flights.ID
     let price: Double
-    let traveller: Traveller
+    let departure: String
+    let arrival: String
 }

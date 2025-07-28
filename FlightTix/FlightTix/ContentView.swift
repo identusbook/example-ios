@@ -110,7 +110,7 @@ struct ContentView: View {
                     }
                 }
         case .login:
-            RegisterScreen()
+            RegisterScreen(onClose: {})
         case .tabs:
             TabView(selection: $selectedTab) {
                 PurchaseView()
@@ -149,7 +149,7 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showRegisterScreen,
                              onDismiss: reloadModels,
                              content: {
-                RegisterScreen()
+                RegisterScreen(onClose: {})
             })
             .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.85, blendDuration: 0.25), value: modal)
             .edgesIgnoringSafeArea(.all)
