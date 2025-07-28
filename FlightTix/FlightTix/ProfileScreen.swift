@@ -14,11 +14,6 @@ struct ProfileScreen: View {
     
     @State private var profileLoaded: Bool = false
     
-    private func logout() {
-        dismiss()
-    }
-    
-    var onClose: () -> Void
     var body: some View {
         ZStack {
             if !profileLoaded {
@@ -42,7 +37,7 @@ struct ProfileScreen: View {
                     }
 
                     Button  {
-                        logout()
+                        dismiss()
                     } label: {
                         Text("Close")
                     }
