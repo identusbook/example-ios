@@ -8,19 +8,11 @@
 import SwiftUI
 
 struct PurchaseView: View {
-    
+    @EnvironmentObject var modalManager: ModalManager
     @StateObject private var model: PurchaseViewModel = PurchaseViewModel()
-    
     @State private var presentingProfile = false
-    
     @State private var selectedFlight: Flight? = nil
-    
-    
-    private func showProfile() {
-        presentingProfile = true
-    }
-    private func didDismiss() { presentingProfile = false; }
-    
+
     var body: some View {
         ZStack {
             VStack {
@@ -46,17 +38,13 @@ struct PurchaseView: View {
                 HStack {
                     Spacer()
                     Button  {
-                        showProfile()
+                        modalManager.show(.profile)
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
                             .frame(width: 44, height: 44)
                     }
                     .padding(.trailing, 24)
-                    .fullScreenCover(isPresented: $presentingProfile, onDismiss: didDismiss, content: {
-                        ProfileScreen(onClose: { presentingProfile = false; })
-                    })
-                    
                 }
                 .padding(.top, 8)
                 Spacer()

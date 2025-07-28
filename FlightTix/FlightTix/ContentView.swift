@@ -28,15 +28,14 @@ enum ViewState {
     case tabs
 }
 
-enum AppModal: Identifiable, Equatable {
-    
-    case none
+enum ActiveModal: Identifiable {
     case profile
+    case register
 
     var id: String {
         switch self {
-        case .none: return "none"
         case .profile: return "profile"
+        case .register: return "register"
         }
     }
 }
@@ -46,7 +45,6 @@ struct ContentView: View {
     @State private var identus: Identus?
     @State private var auth: Auth?
     
-    @State var showRegisterScreen: Bool = false
     @State private var selectedTab: NavigationItem = .purchase
     @State private var viewState: ViewState = .loading
     
@@ -54,34 +52,7 @@ struct ContentView: View {
     
     private func reloadModels() { print("reloading models...") }
     
-    @State private var modal: AppModal?
-    
-    // Show a modal (replaces any currently showing one)
-    private func showModal(_ newModal: AppModal) {
-        if modal != newModal {
-            modal = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                modal = newModal
-            }
-        }
-    }
-    
-    // Dismiss the modal
-    private func dismissModal() {
-        modal = nil
-    }
-    
-    // Return the appropriate modal view
-    @ViewBuilder
-    private func modalView(for modal: AppModal) -> some View {
-        switch modal {
-        case .none:
-            EmptyView()
-        case .profile:
-            ProfileScreen(onClose: dismissModal)
-        }
-    }
-    
+    @EnvironmentObject var modalManager: ModalManager
     
     var body: some View {
         
@@ -110,7 +81,7 @@ struct ContentView: View {
                     }
                 }
         case .login:
-            RegisterScreen(onClose: {})
+            RegisterScreen()
         case .tabs:
             TabView(selection: $selectedTab) {
                 PurchaseView()
@@ -146,35 +117,23 @@ struct ContentView: View {
                     _ = await showRegisterScreenIfNoLoginVC()
                 }
             }
-            .fullScreenCover(isPresented: $showRegisterScreen,
-                             onDismiss: reloadModels,
-                             content: {
-                RegisterScreen(onClose: {})
-            })
-            .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.85, blendDuration: 0.25), value: modal)
+            .fullScreenCover(item: $modalManager.activeModal) { modal in
+                switch modal {
+                case .profile:
+                    ProfileScreen()
+                case .register:
+                    RegisterScreen()
+                }
+            }
             .edgesIgnoringSafeArea(.all)
-        }
-        
-        
-        // Modal overlay
-        if let modal = modal {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { dismissModal() }
-
-            modalView(for: modal)
-                .transition(.asymmetric(
-                    insertion: .move(edge: .bottom).combined(with: .opacity),
-                    removal: .move(edge: .bottom).combined(with: .opacity)
-                ))
-                .zIndex(1)
         }
     }
     
     @MainActor
     private func showRegisterScreenIfNoLoginVC() async {
         if await !Auth.shared.isLoggedIn() {
-            showRegisterScreen = true
+            //showRegisterScreen = true
+            modalManager.show(.register)
         }
     }
 }

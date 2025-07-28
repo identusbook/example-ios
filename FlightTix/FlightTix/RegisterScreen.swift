@@ -14,7 +14,6 @@ struct RegisterScreen: View {
     final class RegisterFormVerifyCredentialError: Error {}
     
     @Environment(\.dismiss) private var dismiss
-    var onClose: () -> Void
     
     @StateObject var model: RegisterViewModel = RegisterViewModel()
     
@@ -51,35 +50,34 @@ struct RegisterScreen: View {
         
         // Dismiss LoginScreen after Proof flow is complete
         dismiss()
-        
     }
     
     var body: some View {
         ZStack {
-            Form {
-                Section("Passport Information") {
-                    TextField("Name", text: $name).focused($isFieldFocused)
-                    TextField("Passport Number", text: $passportNumber)
-                    DatePicker(
-                        "Birthdate",
-                        selection: $dob,
-                        displayedComponents: [.date]
-                    )
-                }
-                
-                Section {
-                    Button {
-                        Task {
-                            try await onRegisterSubmit()
-                        }
-                    } label: {
-                        Text("Submit")
+            VStack {
+                Form {
+                    Section("Passport Information") {
+                        TextField("Name", text: $name).focused($isFieldFocused)
+                        TextField("Passport Number", text: $passportNumber)
+                        DatePicker(
+                            "Birthdate",
+                            selection: $dob,
+                            displayedComponents: [.date]
+                        )
                     }
                     
+                    Section {
+                        Button {
+                            Task {
+                                try await onRegisterSubmit()
+                            }
+                        } label: {
+                            Text("Submit")
+                        }
+                    }
                 }
-                
                 Button  {
-                    onClose()
+                    dismiss()
                 } label: {
                     Text("Close")
                 }
@@ -92,5 +90,5 @@ struct RegisterScreen: View {
 }
 
 #Preview {
-    RegisterScreen(onClose: {})
+    RegisterScreen()
 }
