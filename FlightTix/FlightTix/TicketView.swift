@@ -14,6 +14,18 @@ struct TicketView: View {
     
     @State private var ticketLoaded: Bool = false
     
+    var valueFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+    
+    func formattedPrice(_ price: Double) -> String {
+        return valueFormatter.string(from: NSNumber(value: price)) ?? ""
+    }
+    
     var body: some View {
         ZStack {
             VStack {
@@ -24,7 +36,7 @@ struct TicketView: View {
                         Text("Your Ticket Details:")
                         Text("Departure: \(model.ticket?.departure ?? "")")
                         Text("Arrival: \(model.ticket?.arrival ?? "")")
-                        Text("Price: \(model.ticket?.price ?? 0.0)")
+                        Text("Price: \(formattedPrice(model.ticket!.price))")
                     }
                 }
             }

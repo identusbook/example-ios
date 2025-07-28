@@ -85,14 +85,9 @@ class TicketViewModel: ObservableObject {
         }
         
         let claimValues = populateTicketClaims(claims: cred.claims)
+        let priceAsDouble = (claimValues.price! as NSString).doubleValue
         
-        let flight: Flight = Flight(
-            departure: claimValues.departure ?? "",
-            arrival: claimValues.arrival ?? "",
-            price: 0.0
-        )
-        
-        let ticket: Ticket = Ticket(price: 0.0,
+        let ticket: Ticket = Ticket(price: priceAsDouble,
                             departure: claimValues.departure ?? "",
                             arrival: claimValues.arrival ?? "")
         return ticket
@@ -112,10 +107,10 @@ class TicketViewModel: ObservableObject {
                 price = claim.getValueAsString()
             }
             if claim.key == "departure" {
-                price = claim.getValueAsString()
+                departure = claim.getValueAsString()
             }
             if claim.key == "arrival" {
-                price = claim.getValueAsString()
+                arrival = claim.getValueAsString()
             }
             if claim.key == "dateOfIssuance" {
                 let doiString = claim.getValueAsString()
