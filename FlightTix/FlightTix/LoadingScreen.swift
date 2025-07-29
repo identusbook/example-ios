@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import IdentusSwift
 
 struct LoadingScreen: View {
     
@@ -16,6 +17,7 @@ struct LoadingScreen: View {
     var body: some View {
         ZStack {
             VStack {
+                Spacer()
                 Text("FlightTxt")
                     .font(.largeTitle)
                 Text("powered by")
@@ -38,7 +40,13 @@ struct LoadingScreen: View {
                     Text("Tear Down and Stop")
                 }
                 .buttonStyle(.bordered)
-
+                
+                Spacer()
+                
+                VStack {
+                    Text("IdentusSwift: v\(IdentusSwift.version())")
+                }
+                Spacer()
             }
             .padding()
             

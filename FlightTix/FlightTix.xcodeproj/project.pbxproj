@@ -27,6 +27,7 @@
 		DD6BF9AB2DE61D5100DD47B3 /* Mercury in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AA2DE61D5100DD47B3 /* Mercury */; };
 		DD6BF9AD2DE61D5100DD47B3 /* Pluto in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AC2DE61D5100DD47B3 /* Pluto */; };
 		DD6BF9AF2DE61D5100DD47B3 /* Pollux in Frameworks */ = {isa = PBXBuildFile; productRef = DD6BF9AE2DE61D5100DD47B3 /* Pollux */; };
+		DD9535062E38FBDE00A23E41 /* IdentusSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DD9535052E38FBDE00A23E41 /* IdentusSwift */; };
 		DDB67EF82DE8437800567E6E /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = DDB67EF72DE8437800567E6E /* Apollo */; };
 		DDB67EFA2DE8437800567E6E /* Authenticate in Frameworks */ = {isa = PBXBuildFile; productRef = DDB67EF92DE8437800567E6E /* Authenticate */; };
 		DDB67EFC2DE8437800567E6E /* Builders in Frameworks */ = {isa = PBXBuildFile; productRef = DDB67EFB2DE8437800567E6E /* Builders */; };
@@ -131,6 +132,7 @@
 				DD30D2C42DE8B15300E4CF4F /* Builders in Frameworks */,
 				DDB67F022DE8437800567E6E /* EdgeAgent in Frameworks */,
 				DDD641152DE5E4FF005DE0AF /* Authenticate in Frameworks */,
+				DD9535062E38FBDE00A23E41 /* IdentusSwift in Frameworks */,
 				DDD641172DE5E4FF005DE0AF /* Builders in Frameworks */,
 				DD6BF9A52DE61D5100DD47B3 /* Domain in Frameworks */,
 				DD6BF9A72DE61D5100DD47B3 /* EdgeAgent in Frameworks */,
@@ -246,6 +248,7 @@
 				DD30D2CD2DE8B15300E4CF4F /* Mercury */,
 				DD30D2CF2DE8B15300E4CF4F /* Pluto */,
 				DD30D2D12DE8B15300E4CF4F /* Pollux */,
+				DD9535052E38FBDE00A23E41 /* IdentusSwift */,
 			);
 			productName = FlightTix;
 			productReference = FCC0A7822CE00D3D00649302 /* FlightTix.app */;
@@ -332,6 +335,7 @@
 			packageReferences = (
 				FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				DD30D2BE2DE8B15300E4CF4F /* XCRemoteSwiftPackageReference "sdk-swift" */,
+				DD9535042E38FBDE00A23E41 /* XCRemoteSwiftPackageReference "identus-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FCC0A7832CE00D3D00649302 /* Products */;
@@ -747,6 +751,14 @@
 				minimumVersion = 7.2.0;
 			};
 		};
+		DD9535042E38FBDE00A23E41 /* XCRemoteSwiftPackageReference "identus-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:goodfuturellc/identus-swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		FC4D618D2D18CC1200CB2733 /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/evgenyneu/keychain-swift";
@@ -847,6 +859,11 @@
 		DD6BF9AE2DE61D5100DD47B3 /* Pollux */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Pollux;
+		};
+		DD9535052E38FBDE00A23E41 /* IdentusSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD9535042E38FBDE00A23E41 /* XCRemoteSwiftPackageReference "identus-swift" */;
+			productName = IdentusSwift;
 		};
 		DDB67EF72DE8437800567E6E /* Apollo */ = {
 			isa = XCSwiftPackageProductDependency;
