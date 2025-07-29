@@ -1,5 +1,5 @@
 {
-  "originHash" : "d82645e6015412a9c59cb521637002bd22618106556b9cd317239f50b5321bfe",
+  "originHash" : "4cd489722996289f777946785d5a3704e13493192f8380b6dcc446c5891b8742",
   "pins" : [
     {
       "identity" : "anoncreds-rs",
@@ -89,6 +89,15 @@
       "state" : {
         "revision" : "6b331d9ea1432ada4c1124af95a671d0c38bd9e2",
         "version" : "1.4.2"
+      }
+    },
+    {
+      "identity" : "identus-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:goodfuturellc/identus-swift.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "c928e8e78ee43f1a198765c4a5315c272d2e5dd0"
       }
     },
     {
