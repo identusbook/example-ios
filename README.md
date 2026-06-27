@@ -9,6 +9,10 @@ self-sovereign-identity stack. It runs an **edge agent** on-device that:
 
 This README covers running the full stack locally and pointing the iOS app at it for development.
 
+There are **two independent projects**: this iOS app repository (which you're reading), and the
+**identus-docker** backend stack (a separate repository). Clone them wherever you like — they don't
+need to be siblings — and follow the steps below to connect them.
+
 ---
 
 ## Architecture
@@ -45,15 +49,20 @@ Two backends matter to the app, configured in `FlightTix/FlightTix/Agent/Identus
 - **Docker Desktop** (running).
 - A **GitHub SSH key**, configured and added to your account — the Swift Package dependencies resolve over `git@github.com:` URLs (`hyperledger-identus/sdk-swift`, `goodfuturellc/identus-swift`). Verify with `ssh -T git@github.com`.
 - `jq` (only for the optional helper scripts): `brew install jq`.
-- The **identus-docker** stack on disk. In this environment it lives at:
-  `/Users/jonbauer/Developer/Projects/Identus/Source/identus/identus-docker`
+- The **identus-docker** stack — a separate project that bundles the Cloud Agent, Mediator, and their
+  dependencies as Docker Compose services. Obtain it and place it anywhere on your machine. This README
+  refers to its directory as `$IDENTUS_DOCKER`; set it once for the commands below, e.g.:
+
+  ```bash
+  export IDENTUS_DOCKER=~/path/to/identus-docker
+  ```
 
 ---
 
 ## Part 1 — Run the backend (identus-docker)
 
 ```bash
-cd /Users/jonbauer/Developer/Projects/Identus/Source/identus/identus-docker
+cd "$IDENTUS_DOCKER"
 docker compose up -d
 ```
 
@@ -206,7 +215,7 @@ names won't resolve. To run on-device:
   Simulator menu → **Device → Erase All Content and Settings**, or delete the app.
 - **Backend data** (DIDs, schemas, mediator mailbox):
   ```bash
-  cd /Users/jonbauer/Developer/Projects/Identus/Source/identus/identus-docker
+  cd "$IDENTUS_DOCKER"
   docker compose down -v && docker compose up -d
   ```
 
