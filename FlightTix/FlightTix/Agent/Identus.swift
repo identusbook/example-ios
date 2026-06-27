@@ -228,7 +228,16 @@ final class Identus: ObservableObject {
             status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
             try await didCommAgent?.start()
         } catch {
+            // Surface the real failure instead of swallowing it — otherwise bootstrap
+            // continues without an achieved mediation and cascades into confusing
+            // "There is no mediator" errors downstream.
+            print("DIDCommAgent.start() failed: \(String(reflecting: error))")
             self.error = error.localizedDescription
+            status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
+            Task { @MainActor in
+                self.identusStatus.status = .error(error)
+            }
+            throw error
         }
         status = didCommAgent?.state.rawValue ?? "Status Not Available - didComAgent is nil"
     }
