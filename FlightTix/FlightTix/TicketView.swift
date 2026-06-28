@@ -58,15 +58,15 @@ struct TicketView: View {
 
             Spacer()
         }
-        .onAppear() {
-            // Check for Ticket VC
-            // Load data from Ticket VC
-            Task {
+        .task {
+            // Load the ticket credential. Always stop the loading state afterward,
+            // even on failure, so the screen never hangs on "Loading…".
+            do {
                 try await model.getTicket()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    ticketLoaded = true
-                }
+            } catch {
+                print("Could not load ticket details: \(error)")
             }
+            ticketLoaded = true
         }
     }
 }

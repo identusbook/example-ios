@@ -76,15 +76,34 @@ class PurchaseViewModel: ObservableObject {
             guard Identus.shared.storeTicketVCThidInKeychain(thid: credentialOffer.thid) else {
                 throw TicketStoreThidInKeychainError()
             }
-            
+
+            // The offer is created and auto-issuance kicked off, but the credential is
+            // actually issued over DIDComm a moment later. Wait until the issuer reports
+            // it sent so the button's busy state covers the full request → issue cycle.
+            try await awaitCredentialIssued(recordId: credentialOffer.recordId)
+
             Task { @MainActor in
                 purchaseComplete = true
             }
-            
+
         } catch {
             print(error)
             throw TicketCreateCredentialOfferError()
         }
     }
-    
+
+    /// Poll the Cloud Agent's issue-credential record until the credential has been
+    /// issued (or we time out), so the UI can show a busy state for the whole flow.
+    private func awaitCredentialIssued(recordId: String, timeout: TimeInterval = 90) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if let record = try? await Identus.shared.credentialRecord(recordId: recordId),
+               record.protocolState == "CredentialSent" {
+                return
+            }
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+        }
+        throw TicketCreateCredentialOfferError()
+    }
+
 }

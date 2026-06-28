@@ -69,11 +69,11 @@ class TicketViewModel: ObservableObject {
         }
     }
 
+    @MainActor
     func getTicket() async throws {
-        let ticket = try await getTicketDetails()
-        Task { @MainActor in
-            self.ticket = ticket
-        }
+        // Set on the main actor before returning so the view sees `ticket`
+        // populated by the time it stops showing the loading state.
+        self.ticket = try await getTicketDetails()
     }
     
     func getTicketDetails() async throws -> Ticket {

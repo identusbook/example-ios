@@ -20,11 +20,11 @@ class ProfileViewModel: ObservableObject {
     
     @Published var error: Error?
     
+    @MainActor
     func getTraveller() async throws {
-        let traveller = try await getPassportDetails()
-        Task { @MainActor in
-            self.traveller = traveller
-        }
+        // Set on the main actor before returning so the view sees `traveller`
+        // populated by the time it stops showing the loading state.
+        self.traveller = try await getPassportDetails()
     }
     
     func getPassportDetails() async throws -> Traveller {

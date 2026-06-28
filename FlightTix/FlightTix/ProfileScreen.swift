@@ -55,15 +55,15 @@ struct ProfileScreen: View {
             .buttonStyle(.secondaryAction)
             .padding()
         }
-        .onAppear() {
-            // Check for Passport VC
-            // Load data from Passport VC
-            Task {
+        .task {
+            // Load the passport credential. Always stop the loading state afterward,
+            // even on failure, so the screen never hangs on "Loading…".
+            do {
                 try await model.getTraveller()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    profileLoaded = true
-                }
+            } catch {
+                print("Could not load passport details: \(error)")
             }
+            profileLoaded = true
         }
     }
 }
