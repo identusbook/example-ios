@@ -18,7 +18,7 @@ struct LoadingScreen: View {
         ZStack {
             VStack {
                 Spacer()
-                Text("FlightTxt")
+                Text("FlightTix")
                     .font(.largeTitle)
                 Text("powered by")
                     .font(.callout)
