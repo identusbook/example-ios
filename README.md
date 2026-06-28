@@ -15,6 +15,16 @@ need to be siblings — and follow the steps below to connect them.
 
 ---
 
+## Demo Video
+
+A short walkthrough of FlightTix issuing and verifying credentials end-to-end (click to play on YouTube):
+
+[![FlightTix demo walkthrough](https://img.youtube.com/vi/nrmxHeUf9-s/hqdefault.jpg)](https://youtu.be/nrmxHeUf9-s)
+
+▶️ **[Watch on YouTube](https://youtu.be/nrmxHeUf9-s)**
+
+---
+
 ## Architecture
 
 ```
