@@ -39,16 +39,16 @@ struct ProofReviewSheet: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 16) {
-                Button(role: .destructive) { onDeny() } label: {
-                    Text("Deny").frame(maxWidth: .infinity)
+                Button { onDeny() } label: {
+                    Text("Deny")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.secondaryAction(tint: .red))
                 .accessibilityIdentifier("proofReview.denyButton")
 
                 Button { onAccept() } label: {
-                    Text("Accept").frame(maxWidth: .infinity)
+                    Text("Accept")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .disabled(!review.allValid)   // accept only a fully verified proof
                 .accessibilityIdentifier("proofReview.acceptButton")
             }

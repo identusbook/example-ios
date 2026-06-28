@@ -53,35 +53,41 @@ struct RegisterScreen: View {
     }
     
     var body: some View {
-        ZStack {
-            VStack {
-                Form {
-                    Section("Passport Information") {
-                        TextField("Name", text: $name).focused($isFieldFocused)
-                        TextField("Passport Number", text: $passportNumber)
-                        DatePicker(
-                            "Birthdate",
-                            selection: $dob,
-                            displayedComponents: [.date]
-                        )
-                    }
-                    
-                    Section {
-                        Button {
-                            Task {
-                                try await onRegisterSubmit()
-                            }
-                        } label: {
-                            Text("Submit")
-                        }
-                    }
+        VStack(spacing: 0) {
+            ScreenHeader(title: "Create Passport",
+                         subtitle: "We'll issue a passport credential to your wallet.")
+                .padding(.top)
+
+            Form {
+                Section("Passport Information") {
+                    TextField("Name", text: $name).focused($isFieldFocused)
+                    TextField("Passport Number", text: $passportNumber)
+                    DatePicker(
+                        "Birthdate",
+                        selection: $dob,
+                        displayedComponents: [.date]
+                    )
                 }
-                Button  {
+            }
+
+            VStack(spacing: 12) {
+                Button {
+                    Task {
+                        try await onRegisterSubmit()
+                    }
+                } label: {
+                    Text("Submit")
+                }
+                .buttonStyle(.primary)
+
+                Button {
                     dismiss()
                 } label: {
                     Text("Close")
                 }
+                .buttonStyle(.secondaryAction)
             }
+            .padding()
         }
         .onAppear {
             isFieldFocused = true

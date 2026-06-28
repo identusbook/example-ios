@@ -14,43 +14,56 @@ struct PurchaseView: View {
     @State private var selectedFlight: Flight? = nil
 
     var body: some View {
-        ZStack {
-            VStack {
-                Text("Choose Flight:")
+        VStack(alignment: .leading, spacing: 24) {
+            // Title row with the profile shortcut inline so nothing overlaps.
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Purchase").font(.largeTitle.weight(.bold))
+                    Text("Buy a flight to receive a ticket credential.")
+                        .font(.subheadline).foregroundColor(.secondary)
+                }
+                Spacer()
+                Button {
+                    modalManager.show(.profile)
+                } label: {
+                    Image(systemName: "person.crop.circle.fill")
+                        .resizable()
+                        .frame(width: 36, height: 36)
+                        .foregroundColor(.accentColor)
+                }
+            }
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Choose Flight").font(.headline)
                 Picker("Flights", selection: $selectedFlight) {
                     ForEach(model.availableFlights, id: \.self) { flight in
                         Text("\(flight.departure) → \(flight.arrival) – \(flight.price, format: .currency(code: "USD"))").tag(flight)
                     }
                 }
                 .pickerStyle(.menu)
-                
-                Button  {
-                    Task {
-                        try await model.purchaseTicket(for: Flight(departure: selectedFlight!.departure, arrival: selectedFlight!.arrival, price: selectedFlight!.price))
-                    }
-                } label: {
-                    Text("Purchase Ticket")
-                }
-                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(Color(.secondarySystemBackground),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            
-            VStack {
-                HStack {
-                    Spacer()
-                    Button  {
-                        modalManager.show(.profile)
-                    } label: {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 44, height: 44)
-                    }
-                    .padding(.trailing, 24)
+            .padding(.horizontal)
+
+            Button {
+                guard let selectedFlight else { return }
+                Task {
+                    try await model.purchaseTicket(for: Flight(departure: selectedFlight.departure, arrival: selectedFlight.arrival, price: selectedFlight.price))
                 }
-                .padding(.top, 8)
-                Spacer()
+            } label: {
+                Text("Purchase Ticket")
             }
-            
+            .buttonStyle(.primary)
+            .disabled(selectedFlight == nil)
+            .padding(.horizontal)
+
+            Spacer()
         }
+        .padding(.top)
         .onAppear {
             // assign from the exact array coming out of your VM
             if selectedFlight == nil {

@@ -39,7 +39,8 @@ struct LoadingScreen: View {
                 } label: {
                     Text("Tear Down and Stop")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.secondaryAction)
+                .padding(.horizontal, 48)
                 
                 Spacer()
                 

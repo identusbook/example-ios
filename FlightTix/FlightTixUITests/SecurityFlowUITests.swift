@@ -63,7 +63,7 @@ final class SecurityFlowUITests: XCTestCase {
         app.tabBars.buttons["Airport Security"].tap()
 
         // Key controls render.
-        XCTAssertTrue(app.staticTexts["security.header"].waitForExistence(timeout: 10),
+        XCTAssertTrue(app.staticTexts["Airport Security"].waitForExistence(timeout: 10),
                       "Security header missing")
         let requestButton = app.buttons["security.requestProofButton"]
         XCTAssertTrue(requestButton.waitForExistence(timeout: 10), "Request Proof button missing")
@@ -77,7 +77,7 @@ final class SecurityFlowUITests: XCTestCase {
 
         // Tapping triggers the flow without crashing; the app stays responsive.
         requestButton.tap()
-        XCTAssertTrue(app.staticTexts["security.header"].waitForExistence(timeout: 10),
+        XCTAssertTrue(app.staticTexts["Airport Security"].waitForExistence(timeout: 10),
                       "App became unresponsive after tapping Request Proof")
     }
 

@@ -13,19 +13,16 @@ struct SecurityView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Airport Security")
-                .font(.largeTitle).bold()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+            ScreenHeader(title: "Airport Security",
+                         subtitle: "Request and verify a traveller's credentials.")
                 .accessibilityIdentifier("security.header")
 
             Button {
                 Task { await vm.requestProofOfTicketAndPassport() }
             } label: {
                 Text("Request Proof of Ticket")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .disabled(vm.isBusy)
             .padding(.horizontal)
             .accessibilityIdentifier("security.requestProofButton")
