@@ -11,6 +11,8 @@ struct DevUtils: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject var model: DevUtilsModel = .init()
+
+    @State private var confirmation: String?
     
     var body: some View {
         VStack(spacing: 16) {
@@ -32,6 +34,7 @@ struct DevUtils: View {
 
                             // Verify: Request Proof of valid Passport VC
                             _ = try await model.requestProofOfPassport()
+                            await MainActor.run { confirmation = "Passport credential issued." }
                         } catch {
                             print("Issue Passport failed: \(error)")
                         }
@@ -47,6 +50,7 @@ struct DevUtils: View {
                             try await Task.sleep(nanoseconds: 30_000_000_000)
                             // Verify: Request Proof of valid Ticket VC
                             _ = try await model.requestProofOfTicket()
+                            await MainActor.run { confirmation = "Ticket credential issued." }
                         } catch {
                             print("Issue Ticket failed: \(error)")
                         }
@@ -81,6 +85,12 @@ struct DevUtils: View {
                 }
                 .padding()
             }
+        }
+        .alert("Done", isPresented: Binding(get: { confirmation != nil },
+                                            set: { if !$0 { confirmation = nil } })) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(confirmation ?? "")
         }
     }
 }

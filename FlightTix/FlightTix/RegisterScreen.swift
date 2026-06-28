@@ -20,7 +20,8 @@ struct RegisterScreen: View {
     @State private var name: String = ""
     @State private var passportNumber: String = ""
     @State private var dob = Date()
-    
+    @State private var registered = false
+
     @FocusState private var isFieldFocused: Bool
     
     private func onRegisterSubmit() async throws {
@@ -47,12 +48,52 @@ struct RegisterScreen: View {
         // Verify: Request Proof of valid Passport VC
         let presentation = try await model.requestProof()
         //print("PRESENTATION REQUEST IS: \(presentation)")
-        
-        // Dismiss LoginScreen after Proof flow is complete
-        dismiss()
+
+        // Show a confirmation and let the user close the sheet themselves.
+        await MainActor.run { registered = true }
     }
     
     var body: some View {
+        Group {
+            if registered {
+                successView
+            } else {
+                formView
+            }
+        }
+        .task {
+            // Gate the form on the issuer DID being published (issuance depends on it).
+            await model.confirmIssuerReady()
+        }
+        .onAppear {
+            isFieldFocused = true
+        }
+    }
+
+    private var successView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 64))
+                .foregroundColor(.green)
+            Text("Passport Issued")
+                .font(.title.weight(.bold))
+            Text("Your passport credential is now in your wallet.")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Text("Done")
+            }
+            .buttonStyle(.primary)
+            .padding()
+        }
+    }
+
+    private var formView: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: "Create Passport",
                          subtitle: "We'll issue a passport credential to your wallet.")
@@ -102,13 +143,6 @@ struct RegisterScreen: View {
                 .buttonStyle(.secondaryAction)
             }
             .padding()
-        }
-        .task {
-            // Gate the form on the issuer DID being published (issuance depends on it).
-            await model.confirmIssuerReady()
-        }
-        .onAppear {
-            isFieldFocused = true
         }
     }
 }

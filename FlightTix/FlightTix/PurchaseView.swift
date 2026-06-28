@@ -70,6 +70,11 @@ struct PurchaseView: View {
                 selectedFlight = model.availableFlights.first
             }
         }
+        .alert("Ticket Issued ✈️", isPresented: $model.purchaseComplete) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your ticket credential has been issued to your wallet. You can view it on the Ticket tab.")
+        }
     }
 }
 

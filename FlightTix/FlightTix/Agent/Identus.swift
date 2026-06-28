@@ -646,7 +646,13 @@ final class Identus: ObservableObject {
         }
         throw CredentialRecordResponseFailedError()
     }
-    
+
+    /// Status-only fetch of an issue-credential record (works for any credential type).
+    public func credentialRecordStatus(recordId: String) async throws -> CredentialRecordStatus? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        return try await networkActor.cloudAgent.credentialRecordStatus(recordId: recordId)
+    }
+
     public func acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest) async throws -> CredentialRecordResponse {
         let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
         do {

@@ -97,7 +97,7 @@ class PurchaseViewModel: ObservableObject {
     private func awaitCredentialIssued(recordId: String, timeout: TimeInterval = 90) async throws {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            if let record = try? await Identus.shared.credentialRecord(recordId: recordId),
+            if let record = try? await Identus.shared.credentialRecordStatus(recordId: recordId),
                record.protocolState == "CredentialSent" {
                 return
             }
