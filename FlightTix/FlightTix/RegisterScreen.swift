@@ -58,6 +58,18 @@ struct RegisterScreen: View {
                          subtitle: "We'll issue a passport credential to your wallet.")
                 .padding(.top)
 
+            if !model.isIssuerReady {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Preparing issuer… the form will enable once it's ready.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top, 8)
+            }
+
             Form {
                 Section("Passport Information") {
                     TextField("Name", text: $name).focused($isFieldFocused)
@@ -69,6 +81,7 @@ struct RegisterScreen: View {
                     )
                 }
             }
+            .disabled(!model.isIssuerReady)
 
             VStack(spacing: 12) {
                 AsyncButton("Submit") {
@@ -79,6 +92,7 @@ struct RegisterScreen: View {
                     }
                 }
                 .buttonStyle(.primary)
+                .disabled(!model.isIssuerReady)
 
                 Button {
                     dismiss()
@@ -88,6 +102,10 @@ struct RegisterScreen: View {
                 .buttonStyle(.secondaryAction)
             }
             .padding()
+        }
+        .task {
+            // Gate the form on the issuer DID being published (issuance depends on it).
+            await model.confirmIssuerReady()
         }
         .onAppear {
             isFieldFocused = true

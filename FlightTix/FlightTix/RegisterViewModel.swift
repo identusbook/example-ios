@@ -18,7 +18,35 @@ class RegisterViewModel: ObservableObject {
     final class RegisterReadPassportSchemaIDFromKeychainError: Error {}
     final class RegisterConnectionIDFromKeychainError: Error {}
     final class RegisterStoreThidInKeychainError: Error {}
-    
+
+    /// True once the issuer DID is confirmed PUBLISHED on the Cloud Agent.
+    /// Issuing a passport depends on this, so the form stays disabled until it's ready.
+    @Published var isIssuerReady = false
+
+    /// Poll the Cloud Agent until the issuer DID is published, then enable the form.
+    /// Publication finishes asynchronously after startup, so submitting too early
+    /// would fail — this gates the UI on that dependency.
+    @MainActor
+    func confirmIssuerReady() async {
+        while !Task.isCancelled {
+            if await isIssuerPublished() {
+                isIssuerReady = true
+                return
+            }
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+        }
+    }
+
+    private func isIssuerPublished() async -> Bool {
+        guard let issuerDID = Identus.shared.readIssuerDIDFromKeychain() else { return false }
+        do {
+            guard let shortForm = try await Identus.shared.didShortForm(from: issuerDID)?.string else { return false }
+            return try await Identus.shared.verifyIssuerDIDIsPublished(shortOrLongFormDID: shortForm)
+        } catch {
+            return false
+        }
+    }
+
     public func register(passport: Passport) async throws {
         do {
             
