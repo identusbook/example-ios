@@ -50,8 +50,8 @@ struct SecurityView: View {
         .sheet(item: $vm.proofUnderReview) { review in
             ProofReviewSheet(
                 review: review,
-                onAccept: { Task { await vm.accept() } },
-                onDeny: { Task { await vm.deny() } }
+                onAccept: { await vm.accept() },
+                onDeny: { await vm.deny() }
             )
             .bottomSheetDetents()
         }

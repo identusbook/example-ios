@@ -58,6 +58,49 @@ extension ButtonStyle where Self == SecondaryButtonStyle {
     static func secondaryAction(tint: Color) -> SecondaryButtonStyle { SecondaryButtonStyle(tint: tint) }
 }
 
+// MARK: - Async button
+
+/// A button that runs an async action, showing a spinner and disabling itself
+/// while the work is in flight. This is good practice for Identus apps: most
+/// actions involve network / DIDComm round-trips, so the UI should reflect that
+/// something is happening and prevent double-taps.
+///
+/// Apply a button style as usual, e.g. `AsyncButton("Submit") { ... }.buttonStyle(.primary)`.
+/// The action is non-throwing on purpose — handle errors inside the closure so the
+/// call site decides how to surface them.
+struct AsyncButton<Label: View>: View {
+    var spinnerTint: Color = .white
+    var action: () async -> Void
+    @ViewBuilder var label: () -> Label
+
+    @State private var isRunning = false
+
+    var body: some View {
+        Button {
+            guard !isRunning else { return }
+            isRunning = true
+            Task {
+                await action()
+                isRunning = false
+            }
+        } label: {
+            ZStack {
+                label().opacity(isRunning ? 0 : 1)
+                if isRunning {
+                    ProgressView().tint(spinnerTint)
+                }
+            }
+        }
+        .disabled(isRunning)
+    }
+}
+
+extension AsyncButton where Label == Text {
+    init(_ title: String, spinnerTint: Color = .white, action: @escaping () async -> Void) {
+        self.init(spinnerTint: spinnerTint, action: action) { Text(title) }
+    }
+}
+
 // MARK: - Detail card row
 
 /// A label/value row for detail cards (e.g. ticket / passport details).

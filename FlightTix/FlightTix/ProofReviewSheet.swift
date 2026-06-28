@@ -10,8 +10,8 @@ import SwiftUI
 
 struct ProofReviewSheet: View {
     let review: ProofReview
-    let onAccept: () -> Void
-    let onDeny: () -> Void
+    let onAccept: () async -> Void
+    let onDeny: () async -> Void
 
     var body: some View {
         VStack(spacing: 24) {
@@ -39,14 +39,14 @@ struct ProofReviewSheet: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 16) {
-                Button { onDeny() } label: {
-                    Text("Deny")
+                AsyncButton("Deny", spinnerTint: .red) {
+                    await onDeny()
                 }
                 .buttonStyle(.secondaryAction(tint: .red))
                 .accessibilityIdentifier("proofReview.denyButton")
 
-                Button { onAccept() } label: {
-                    Text("Accept")
+                AsyncButton("Accept") {
+                    await onAccept()
                 }
                 .buttonStyle(.primary)
                 .disabled(!review.allValid)   // accept only a fully verified proof

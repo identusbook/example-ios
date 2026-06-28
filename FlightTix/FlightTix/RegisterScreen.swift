@@ -71,12 +71,12 @@ struct RegisterScreen: View {
             }
 
             VStack(spacing: 12) {
-                Button {
-                    Task {
+                AsyncButton("Submit") {
+                    do {
                         try await onRegisterSubmit()
+                    } catch {
+                        print("Register submit failed: \(error)")
                     }
-                } label: {
-                    Text("Submit")
                 }
                 .buttonStyle(.primary)
 

@@ -49,13 +49,13 @@ struct PurchaseView: View {
             }
             .padding(.horizontal)
 
-            Button {
+            AsyncButton("Purchase Ticket") {
                 guard let selectedFlight else { return }
-                Task {
+                do {
                     try await model.purchaseTicket(for: Flight(departure: selectedFlight.departure, arrival: selectedFlight.arrival, price: selectedFlight.price))
+                } catch {
+                    print("Purchase failed: \(error)")
                 }
-            } label: {
-                Text("Purchase Ticket")
             }
             .buttonStyle(.primary)
             .disabled(selectedFlight == nil)

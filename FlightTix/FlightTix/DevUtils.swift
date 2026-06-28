@@ -20,52 +20,36 @@ struct DevUtils: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    Button {
-                        Task {
-                            do {
-                                let isoString = "1976-03-23T00:00:00Z"
-                                let formatter = ISO8601DateFormatter()
+                    AsyncButton("Issue Passport") {
+                        do {
+                            try await model.issuePassport(passport: Passport(name: "Jon Bauer",
+                                                                             did: "did:example:123",
+                                                                             passportNumber: "12345",
+                                                                             dob: Date(),
+                                                                             dateOfIssuance: nil))
+                            // Wait 30 seconds for the Credential dance before trying to verify
+                            try await Task.sleep(nanoseconds: 30_000_000_000)
 
-                                guard let dob = formatter.date(from: isoString) else {
-                                    print("❌ Failed to parse date.")
-                                    return
-                                }
-
-                                try await model.issuePassport(passport: Passport(name: "Jon Bauer",
-                                                                                 did: "did:example:123",
-                                                                                 passportNumber: "12345",
-                                                                                 dob: Date(),
-                                                                                 dateOfIssuance: nil))
-                                // Wait 30 seconds for the Credential dance before trying to verify
-                                try await Task.sleep(nanoseconds: 30_000_000_000)
-
-                                // Verify: Request Proof of valid Passport VC
-                                _ = try await model.requestProofOfPassport()
-                            } catch {
-                                throw error
-                            }
+                            // Verify: Request Proof of valid Passport VC
+                            _ = try await model.requestProofOfPassport()
+                        } catch {
+                            print("Issue Passport failed: \(error)")
                         }
-                    } label: {
-                        Text("Issue Passport")
                     }
                     .buttonStyle(.primary)
                     .accessibilityIdentifier("devutils.issuePassportButton")
 
-                    Button {
-                        Task {
-                            do {
-                                let flight = Flight(departure: "SFO", arrival: "TYO", price: 700.0)
-                                try await model.issueTicket(for: flight)
-                                // Wait 30 seconds for the Credential dance before trying to verify
-                                try await Task.sleep(nanoseconds: 30_000_000_000)
-                                // Verify: Request Proof of valid Ticket VC
-                                _ = try await model.requestProofOfTicket()
-                            } catch {
-                                throw error
-                            }
+                    AsyncButton("Issue Ticket") {
+                        do {
+                            let flight = Flight(departure: "SFO", arrival: "TYO", price: 700.0)
+                            try await model.issueTicket(for: flight)
+                            // Wait 30 seconds for the Credential dance before trying to verify
+                            try await Task.sleep(nanoseconds: 30_000_000_000)
+                            // Verify: Request Proof of valid Ticket VC
+                            _ = try await model.requestProofOfTicket()
+                        } catch {
+                            print("Issue Ticket failed: \(error)")
                         }
-                    } label: {
-                        Text("Issue Ticket")
                     }
                     .buttonStyle(.primary)
                     .accessibilityIdentifier("devutils.issueTicketButton")
