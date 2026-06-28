@@ -43,7 +43,7 @@ class TicketViewModel: ObservableObject {
             do {
                 let credentialOffer = try await Identus.shared.createTicketCredentialOffer(request: CreateTicketCredentialOfferRequest(
                     validityPeriod: 3600,
-                    schemaId: "http://localhost:8085/schema-registry/schemas/\(ticketSchemaId)/schema", // TODO: make this baseURL dynamic.  it's very important to be THIS baseURL, Cloud Agent can't dereference it from Docker if's different.  This should only be this way for dev.  Prod needs a real live URL
+                    schemaId: "\(FlightTixSessionConfigStruct().baseURL)/schema-registry/schemas/\(ticketSchemaId)/schema", // Must match the proof-request schema URL exactly (host included); the Cloud Agent string-compares them during verification.
                     credentialFormat: "JWT",
                     claims: TicketClaimsRequest(name: flight.id.uuidString,
                                                 dateOfIssuance: Date.now.iso8601String(),
