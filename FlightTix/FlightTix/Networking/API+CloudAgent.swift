@@ -88,6 +88,11 @@ extension APIClient {
             let url = URL(string: "\(baseURL)/schema-registry/schemas/\(guid)")!
             return try await get(url: url)
         }
+
+        func listSchemas() async throws -> SchemaSummaryPage? {
+            let url = URL(string: "\(baseURL)/schema-registry/schemas")!
+            return try await get(url: url)
+        }
        
         // Present Proof
         func getPresentations() async throws -> PresentationsResponse {
@@ -106,6 +111,12 @@ extension APIClient {
         }
        
         func acceptPresentationProof(presentationId: String, request: AcceptPresentationProofRequest) async throws -> PresentationsResponse? {
+            let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
+            return try await patch(url: url, request: request)
+        }
+
+        // Verifier accepts/rejects a received presentation (action: presentation-accept | presentation-reject).
+        func updatePresentationProof(presentationId: String, request: VerifierPresentationActionRequest) async throws -> PresentationResponseContent? {
             let url = URL(string: "\(baseURL)/present-proof/presentations/\(presentationId)")!
             return try await patch(url: url, request: request)
         }

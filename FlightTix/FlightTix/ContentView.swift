@@ -48,7 +48,7 @@ struct ContentView: View {
     @State private var selectedTab: NavigationItem = .purchase
     @State private var viewState: ViewState = .loading
     
-    private let identusStatus = IdentusStatus.shared
+    @ObservedObject private var identusStatus = IdentusStatus.shared
     
     private func reloadModels() { print("reloading models...") }
     
@@ -60,7 +60,7 @@ struct ContentView: View {
         case .loading:
             LoadingScreen()
                 .onAppear() {
-                    
+
                     // Initialize Identus, if we fail to initialize, throw error
                     Task {
                         do {
@@ -68,17 +68,18 @@ struct ContentView: View {
 //                             TODO: remember to wipe the Simulator to reset CoreDate because it only appends
                             try await Identus.shared.startUpAndConnect()
                             print(Identus.shared.status)
-                            if identusStatus.status == .ready {
-                                print("we should transition from LoadingScreen to Content")
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                    viewState = .tabs
-                                }
-                            }
-                            
+                            // In case .ready was set before the observer below was attached.
+                            transitionToTabsIfReady()
                         } catch {
                             throw error
                         }
                     }
+                }
+                // .ready is published from a detached @MainActor task, so observe it and
+                // transition reactively rather than checking it once (which raced and could
+                // leave the app stuck on the LoadingScreen).
+                .onChange(of: identusStatus.status) { _ in
+                    transitionToTabsIfReady()
                 }
         case .login:
             RegisterScreen()
@@ -130,7 +131,17 @@ struct ContentView: View {
     }
     
     @MainActor
+    private func transitionToTabsIfReady() {
+        guard viewState == .loading, identusStatus.status == .ready else { return }
+        print("Identus ready — transitioning from LoadingScreen to tabs")
+        viewState = .tabs
+    }
+
+    @MainActor
     private func showRegisterScreenIfNoLoginVC() async {
+        // UI tests drive navigation/issuance directly, so skip the registration gate
+        // when launched with -skipLoginGate.
+        if ProcessInfo.processInfo.arguments.contains("-skipLoginGate") { return }
         if await !Auth.shared.isLoggedIn() {
             //showRegisterScreen = true
             modalManager.show(.register)

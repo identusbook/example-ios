@@ -7,6 +7,20 @@
 
 import Foundation
 
+// Minimal probe used only to read a credential's schema reference(s) so we can
+// match a credential to a schema GUID. It deliberately ignores credentialSubject,
+// whose shape varies by credential type (e.g. a ticket may omit `flightId`), so
+// schema matching never fails just because the claims don't match a fixed model.
+struct CredentialSchemaProbe: Decodable {
+    struct VC: Decodable {
+        let credentialSchema: [CredentialSchemaRef]
+    }
+    struct CredentialSchemaRef: Decodable {
+        let id: String
+    }
+    let vc: VC
+}
+
 // VC Schema
 
 struct VerifiableCredentialEnvelope: Decodable {
@@ -72,7 +86,7 @@ struct TicketVerifiableCredentialEnvelope: Decodable {
     let exp: Int
     let vc: TicketVerifiableCredential
 }
-
+ 
 struct TicketVerifiableCredential: Decodable {
     let credentialSchema: [TicketCredentialSchema]
     let credentialSubject: TicketCredentialSubjectContainer

@@ -62,7 +62,8 @@ final class Identus: ObservableObject {
     final class PollDIDPublicationStatusPublishedTimeoutError: Error {}
     
     final class ProofRequestNotCreatedError: Error {}
-    
+    final class ProofDecisionFailedError: Error {}
+
     final class TicketSchemaNotCreatedError: Error {}
     final class TicketSchemaNotFoundInCloudAgentError: Error {}
     
@@ -191,12 +192,13 @@ final class Identus: ObservableObject {
             // We still might have to wait for a new issuer to publish off the main thread or create a new function for it
             
             
-            // Publish Schemas and store SchemaIds for later reference
+            // Publish Schemas and store SchemaIds for later reference.
+            // Both must run so the keychain schema GUIDs stay in sync with the Cloud Agent.
+            // (Each re-creates its schema if the agent no longer has it — e.g. after a backend
+            // reset — which keeps issuance and proof requests using a matching schema GUID.)
             try await createPassportSchemaIfNotExists()
-            
-            // TODO
-            //try await createTicketSchemaIfNotExists()
-            
+            try await createTicketSchemaIfNotExists()
+
             print("WE SHOULD NOT REACH THIS BEFORE ISSUER IS PUBLISHED")
             //TODO: Only set to .ready when all of these tasks are complete (We need a Task Group)
             Task { @MainActor in
@@ -811,8 +813,11 @@ final class Identus: ObservableObject {
         
         
         var messageIndex: Int = 0
-        var lastProcessedMessageCreatedTime: Date?
-        
+        // Dedup by message id, not timestamp: two messages (e.g. a ticket + passport
+        // presentation request fired together) can share the same second-granularity
+        // createdTime, and a timestamp `>=` check would wrongly skip the second one.
+        var processedMessageIds: Set<String> = []
+
         didCommAgent?.startFetchingMessages()
         didCommAgent?.handleReceivedMessagesEvents()
             .receive(on: DispatchQueue.main)
@@ -829,13 +834,11 @@ final class Identus: ObservableObject {
                         }
                         messageIndex = messageIndex + 1
                         
-                        if let messageCreatedTime = lastProcessedMessageCreatedTime {
-                            if messageCreatedTime >= message.createdTime {
-                                promise(.success(message))
-                                return
-                            }
+                        if processedMessageIds.contains(message.id) {
+                            promise(.success(message))
+                            return
                         }
-                        
+
                         print("Message CreatedTime: \(message.createdTime)")
                         
                         switch msgType {
@@ -869,15 +872,15 @@ final class Identus: ObservableObject {
                         case .didcommOfferCredential3_0:
                             // An offer for a Credential has been made
                             _ = try await self.handleOfferedCredential(message: message)
-                            lastProcessedMessageCreatedTime = message.createdTime
+                            processedMessageIds.insert(message.id)
                         case .didcommIssueCredential3_0:
                             // A Credential has been issued, process and save it to our wallet
                             _ = try await self.handleIssuedCredential(message: message)
-                            lastProcessedMessageCreatedTime = message.createdTime
+                            processedMessageIds.insert(message.id)
                         case .didcommRequestPresentation:
                             // A Verifier has created a Presentation Request
-                            _ = try await self.handleRequestPresentation(message: message, ticketOnly: false)
-                            lastProcessedMessageCreatedTime = message.createdTime
+                            _ = try await self.handleRequestPresentation(message: message)
+                            processedMessageIds.insert(message.id)
                         }
                         promise(.success(message))
                     } catch {
@@ -966,35 +969,32 @@ final class Identus: ObservableObject {
         }
     }
     
-    private func handleRequestPresentation(message: Message, ticketOnly: Bool) async throws -> Presentation? {
-        
+    private func handleRequestPresentation(message: Message) async throws -> Presentation? {
+
+        let requestPresentation = try RequestPresentation(fromMessage: message)
+
+        // Present the credential whose schema matches what the Verifier asked for.
+        // The requested schema travels on the request body's proofTypes.
         let credential: Credential?
-        
-        if ticketOnly {
-            guard let keychainTicketSchemaId = readTicketSchemaIdFromKeychain() else {
-                print("Could not Read TicketSchema ID from keychain")
-                return nil
-            }
-            do {
-                credential = try await self.fetchCredential(ofSchema: keychainTicketSchemaId)
-            } catch {
-                fatalError("Can not fetch credential")
-            }
-            
-            
+        if let requestedSchema = requestPresentation.body.proofTypes.first?.schema,
+           let requestedSchemaGUID = extractSchemaGUID(from: requestedSchema) {
+            print("Verifier requested proof for schema GUID: \(requestedSchemaGUID)")
+            credential = try await self.fetchCredential(ofSchema: requestedSchemaGUID)
         } else {
+            // Fallback: no schema constraint found on the request, present the first available credential.
+            print("No requested schema found on presentation request; using first available credential")
             credential = try await self.didCommAgent?.edgeAgent.verifiableCredentials().map { $0.first }
                 .first()
                 .await()
         }
-        
+
         guard let credential else {
-            print("Credential Not Found!")
+            print("Credential Not Found for requested schema!")
             throw CredentialNotFoundError()
         }
-        
+
         guard let presentation = try await self.didCommAgent?.edgeAgent.createPresentationForRequestProof(
-            request: try RequestPresentation(fromMessage: message),
+            request: requestPresentation,
             credential: credential) else {
             throw HandlePresentationFailedError()
         }
@@ -1014,57 +1014,25 @@ final class Identus: ObservableObject {
         
         do {
             let rawCredentials: [Credential] = try await loadVerifiableCredentials()
-            
+
             for cred in rawCredentials {
-                
+
                 let jws = try JWS(jwsString: cred.id)
-                
-                // decode jws payload
-                let jsonData = jws.payload // this is already `Data` decoded from Base64URL
-                var knownSchemaId: String?
-                do {
-                    let decoder = JSONDecoder()
-                    let credential = try decoder.decode(VerifiableCredentialEnvelope.self, from: jsonData)
-                    for schema in credential.vc.credentialSchema {
-                        
-                        if let guid = extractSchemaGUID(from: schema.id) {
-                            //                                print("✅ Extracted GUID:", guid)
-                            knownSchemaId = guid
-                            break
-                        } else {
-                            print("❌ No match found")
-                        }
+
+                // decode jws payload (already `Data` decoded from Base64URL)
+                let jsonData = jws.payload
+
+                // Read only the schema reference(s) — independent of the credential's
+                // claim shape — and match against the requested schema GUID.
+                guard let probe = try? JSONDecoder().decode(CredentialSchemaProbe.self, from: jsonData) else {
+                    print("Could not read credentialSchema from a credential; skipping it")
+                    continue
+                }
+
+                for schema in probe.vc.credentialSchema {
+                    if let guid = extractSchemaGUID(from: schema.id), guid == schemaId {
+                        return cred
                     }
-                    
-                    
-                } catch {
-                    // It's probably a Ticket then, let's do the same thing for that
-                }
-                
-                do {
-                    let decoder = JSONDecoder()
-                    let credential = try decoder.decode(TicketVerifiableCredentialEnvelope.self, from: jsonData)
-                    for schema in credential.vc.credentialSchema {
-                        
-                        if let guid = extractSchemaGUID(from: schema.id) {
-                            knownSchemaId = guid
-                            break
-                        } else {
-                            print("❌ No match found")
-                        }
-                    }
-                    
-                } catch {
-                    print("❌ Ticket Decoding failed:", error)
-                }
-                
-                if knownSchemaId == Identus.shared.readPassportSchemaIdFromKeychain() {
-                    print("THIS MUST BE THE Passport SCHEMA")
-                    return cred
-                }
-                if knownSchemaId == Identus.shared.readTicketSchemaIdFromKeychain() {
-                    print("THIS MUST BE THE Ticket SCHEMA")
-                    return cred
                 }
             }
         } catch {
@@ -1128,16 +1096,28 @@ final class Identus: ObservableObject {
             self.identusStatus.status = .checkingPassportSchema
         }
         
-        //TODO: Check to see if Passport Schema already exists on Cloud Agent
-        // Only if not, run this code
-        guard let savedPassportSchemaGuid = readPassportSchemaIdFromKeychain() else {
-            try await createPassportSchema()
+        // Already have a GUID that still exists on the agent?
+        if let savedGuid = readPassportSchemaIdFromKeychain(),
+           (try? await getPassportSchemaByGuid(guid: savedGuid)) != nil {
             return
         }
-        guard let schemaExists = try await getPassportSchemaByGuid(guid: savedPassportSchemaGuid) else {
-            try await createPassportSchema()
+        // Adopt an existing passport schema for our issuer if present (creation is not
+        // idempotent and errors on duplicates), otherwise create one.
+        if let issuerDID = readIssuerDIDFromKeychain(),
+           let shortIssuer = try? await didShortForm(from: issuerDID)?.string,
+           let existingGuid = try await findExistingSchemaGuid(name: "passport", author: shortIssuer) {
+            _ = storePassportSchemaIdInKeychain(id: existingGuid)
             return
         }
+        try await createPassportSchema()
+    }
+
+    /// Find an already-published schema by name + author DID, returning its GUID.
+    /// Used so we adopt an existing schema instead of re-creating it (which errors).
+    private func findExistingSchemaGuid(name: String, author: String) async throws -> String? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        guard let page = try? await networkActor.cloudAgent.listSchemas() else { return nil }
+        return page.contents.first(where: { $0.name == name && $0.author == author })?.guid
     }
     
     private func createPassportSchema() async throws {
@@ -1213,17 +1193,20 @@ final class Identus: ObservableObject {
     }
     
     public func createTicketSchemaIfNotExists() async throws {
-        
-        //TODO: Check to see if Ticket Schema already exists on Cloud Agent
-        // Only if not, run this code
-        guard let savedTicketSchemaGuid = readTicketSchemaIdFromKeychain() else {
-            try await createTicketSchema()
+        // Already have a GUID that still exists on the agent?
+        if let savedGuid = readTicketSchemaIdFromKeychain(),
+           (try? await getTicketSchemaByGuid(guid: savedGuid)) != nil {
             return
         }
-        guard let schemaExists = try await getTicketSchemaByGuid(guid: savedTicketSchemaGuid) else {
-            try await createTicketSchema()
+        // Adopt an existing ticket schema for our issuer if present (creation is not
+        // idempotent and errors on duplicates), otherwise create one.
+        if let issuerDID = readIssuerDIDFromKeychain(),
+           let shortIssuer = try? await didShortForm(from: issuerDID)?.string,
+           let existingGuid = try await findExistingSchemaGuid(name: "ticket", author: shortIssuer) {
+            _ = storeTicketSchemaIdInKeychain(id: existingGuid)
             return
         }
+        try await createTicketSchema()
     }
     
     private func createTicketSchema() async throws {
@@ -1335,12 +1318,22 @@ final class Identus: ObservableObject {
         
         guard let connectionId = readConnectionIdFromKeychain() else { return nil }
 
+        // The Cloud Agent verifies the presentation against:
+        //  - the exact schema URL (host included) -> must match the issued credential's
+        //    schemaId, so build it from the same baseURL used at issuance, and
+        //  - trustIssuers -> must be our published issuer's SHORT-form DID, which is the
+        //    form carried in the credential's `issuer` field. "some-issuer" never matched.
+        guard let issuerDID = readIssuerDIDFromKeychain(),
+              let shortFormIssuerDID = try await didShortForm(from: issuerDID)?.string else {
+            print("Cannot create proof request: issuer DID unavailable")
+            return nil
+        }
+
+        let schemaURL = "\(FlightTixSessionConfigStruct().baseURL)/schema-registry/schemas/\(schemaId)/schema"
         let proofPresentationRequest = CreateProofPresentationRequest(
-                                                                      //goalCode: "flighttix-proof-request",
-                                                                      //goal: "Request proof of credential",
                                                                       connectionId: connectionId,
                                                                       options: CreateProofPresentationRequest.Options(challenge: String(describing: UUID()), domain: "identusbook.com"),
-                                                                      proofs: [CreateProofPresentationRequest.ProofRequestAuxRequest(schemaId: "http://localhost:8085/schema-registry/schemas/\(schemaId)/schema", trustIssuers: ["some-issuer"])])
+                                                                      proofs: [CreateProofPresentationRequest.ProofRequestAuxRequest(schemaId: schemaURL, trustIssuers: [shortFormIssuerDID])])
         
         do {
             let presentation = try await networkActor.cloudAgent.createProofPresentation(request: proofPresentationRequest)
@@ -1350,8 +1343,60 @@ final class Identus: ObservableObject {
             throw ProofRequestNotCreatedError()
         }
     }
-    
-    
+
+    /// Statuses at which a verifier-role presentation has reached a result the
+    /// officer can act on (verified/failed) or is already finalized.
+    static let terminalPresentationStatuses: Set<String> = [
+        "PresentationVerified",            // valid — ready for Accept/Deny
+        "PresentationVerificationFailed",  // invalid
+        "PresentationAccepted",
+        "PresentationRejected",
+        "RequestRejected",
+        "ProblemReportReceived",
+        "ProblemReportSent"
+    ]
+
+    /// Poll the Cloud Agent's presentation record until it reaches a terminal
+    /// status (the holder presents asynchronously over DIDComm) or we time out.
+    /// Returns the latest known record regardless, so callers can read `.status`.
+    public func awaitPresentationOutcome(presentationId: String,
+                                         timeoutSeconds: Double = 30,
+                                         pollInterval: Double = 1.5) async throws -> PresentationResponseContent? {
+        let deadline = Date().addingTimeInterval(timeoutSeconds)
+        var latest: PresentationResponseContent? = nil
+        while Date() < deadline {
+            if let record = try await getPresentation(presentationId: presentationId) {
+                latest = record
+                if Identus.terminalPresentationStatuses.contains(record.status) {
+                    return record
+                }
+            }
+            try await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
+        }
+        return latest
+    }
+
+    /// Verifier accepts a received presentation -> status becomes PresentationAccepted.
+    public func acceptPresentation(presentationId: String) async throws -> PresentationResponseContent? {
+        try await updatePresentationDecision(presentationId: presentationId, request: .accept)
+    }
+
+    /// Verifier rejects a received presentation -> status becomes PresentationRejected.
+    public func denyPresentation(presentationId: String) async throws -> PresentationResponseContent? {
+        try await updatePresentationDecision(presentationId: presentationId, request: .reject)
+    }
+
+    private func updatePresentationDecision(presentationId: String,
+                                            request: VerifierPresentationActionRequest) async throws -> PresentationResponseContent? {
+        let networkActor = APIClient(configuration: FlightTixURLSession(mode: .development, config: urlSessionConfig as! FlightTixSessionConfigStruct))
+        do {
+            return try await networkActor.cloudAgent.updatePresentationProof(presentationId: presentationId, request: request)
+        } catch {
+            print("UPDATE PRESENTATION DECISION ERROR (\(request.action)): \(error)")
+            throw ProofDecisionFailedError()
+        }
+    }
+
     /// Verifiable Credentials Verification
 }
 

@@ -11,7 +11,7 @@ public struct PresentationsResponse: Decodable {
     let contents: [PresentationResponseContent]
     let `self`: String
     let kind: String
-    let pageOf: Int
+    let pageOf: String   // the Cloud Agent returns this as a string, not an Int
     //let next: String
     //let previous: String
 }

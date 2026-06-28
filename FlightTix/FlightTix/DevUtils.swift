@@ -96,6 +96,7 @@ struct DevUtils: View {
                 .buttonBorderShape(.roundedRectangle)
                 .buttonStyle(.bordered)
                 .padding(.bottom, 40)
+                .accessibilityIdentifier("devutils.issuePassportButton")
                 
                 Button {
                     Task {
@@ -119,6 +120,7 @@ struct DevUtils: View {
                 .buttonBorderShape(.roundedRectangle)
                 .buttonStyle(.bordered)
                 .padding(.bottom, 40)
+                .accessibilityIdentifier("devutils.issueTicketButton")
                 Spacer()
             }
             .padding(.bottom, 40)
