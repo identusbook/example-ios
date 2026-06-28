@@ -11,121 +11,86 @@ struct DevUtils: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject var model: DevUtilsModel = .init()
+
+    @State private var confirmation: String?
     
     var body: some View {
-        ZStack {
-            VStack {
-                Spacer()
-                Button {
-                    Task {
-                        do {
-                            try await model.tearDown()
-                        } catch {
-                            throw error
-                        }
-                    }
-                } label: {
-                    Text("Reset Wallet")
-                }
-                .buttonBorderShape(.roundedRectangle)
-                .buttonStyle(.bordered)
-                .padding(.bottom, 40)
-                
-                HStack {
-                    Button {
-                        Task {
-                            do {
-                                try await model.startUp()
-                            } catch {
-                                throw error
-                            }
-                        }
-                    } label: {
-                        Text("Start Up and Connect")
-                    }
-                    .buttonBorderShape(.roundedRectangle)
-                    .buttonStyle(.bordered)
-                    
-                    
-                    Button {
-                        Task {
-                            do {
-                                try await model.stop()
-                            } catch {
-                                throw error
-                            }
-                        }
-                    } label: {
-                        Text("Stop")
-                    }
-                    .buttonBorderShape(.roundedRectangle)
-                    .buttonStyle(.bordered)
-                }
-                .padding(.bottom, 40)
-                
-                Button {
-                    Task {
-                        do {
-                            
-                            let isoString = "1976-03-23T00:00:00Z"
-                            let formatter = ISO8601DateFormatter()
+        VStack(spacing: 16) {
+            ScreenHeader(title: "Dev Utils",
+                         subtitle: "Issue test credentials and manage the agent.")
+                .padding(.top)
 
-                            guard let dob = formatter.date(from: isoString) else {
-                                print("❌ Failed to parse date.")
-                                return
-                            }
-                            
+            ScrollView {
+                VStack(spacing: 16) {
+                    AsyncButton("Issue Passport") {
+                        do {
                             try await model.issuePassport(passport: Passport(name: "Jon Bauer",
                                                                              did: "did:example:123",
                                                                              passportNumber: "12345",
                                                                              dob: Date(),
                                                                              dateOfIssuance: nil))
-                            // Wait 30 seconds for for Credential dance before trying to verify
+                            // Wait 30 seconds for the Credential dance before trying to verify
                             try await Task.sleep(nanoseconds: 30_000_000_000)
-                            
+
                             // Verify: Request Proof of valid Passport VC
                             _ = try await model.requestProofOfPassport()
-                            
+                            await MainActor.run { confirmation = "Passport credential issued." }
                         } catch {
-                            throw error
+                            print("Issue Passport failed: \(error)")
                         }
                     }
-                } label: {
-                    Text("Issue Passport")
-                }
-                .buttonBorderShape(.roundedRectangle)
-                .buttonStyle(.bordered)
-                .padding(.bottom, 40)
-                .accessibilityIdentifier("devutils.issuePassportButton")
-                
-                Button {
-                    Task {
+                    .buttonStyle(.primary)
+                    .accessibilityIdentifier("devutils.issuePassportButton")
+
+                    AsyncButton("Issue Ticket") {
                         do {
                             let flight = Flight(departure: "SFO", arrival: "TYO", price: 700.0)
-                            
                             try await model.issueTicket(for: flight)
-                            // Wait 30 seconds for for Credential dance before trying to verify
+                            // Wait 30 seconds for the Credential dance before trying to verify
                             try await Task.sleep(nanoseconds: 30_000_000_000)
-                            
                             // Verify: Request Proof of valid Ticket VC
                             _ = try await model.requestProofOfTicket()
-                            
+                            await MainActor.run { confirmation = "Ticket credential issued." }
                         } catch {
-                            throw error
+                            print("Issue Ticket failed: \(error)")
                         }
                     }
-                } label: {
-                    Text("Issue Ticket")
+                    .buttonStyle(.primary)
+                    .accessibilityIdentifier("devutils.issueTicketButton")
+
+                    Divider().padding(.vertical, 8)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { do { try await model.startUp() } catch { throw error } }
+                        } label: {
+                            Text("Start Up")
+                        }
+                        .buttonStyle(.secondaryAction)
+
+                        Button {
+                            Task { do { try await model.stop() } catch { throw error } }
+                        } label: {
+                            Text("Stop")
+                        }
+                        .buttonStyle(.secondaryAction)
+                    }
+
+                    Button {
+                        Task { do { try await model.tearDown() } catch { throw error } }
+                    } label: {
+                        Text("Reset Wallet")
+                    }
+                    .buttonStyle(.secondaryAction(tint: .red))
                 }
-                .buttonBorderShape(.roundedRectangle)
-                .buttonStyle(.bordered)
-                .padding(.bottom, 40)
-                .accessibilityIdentifier("devutils.issueTicketButton")
-                Spacer()
+                .padding()
             }
-            .padding(.bottom, 40)
-            
-            Spacer()
+        }
+        .alert("Done", isPresented: Binding(get: { confirmation != nil },
+                                            set: { if !$0 { confirmation = nil } })) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(confirmation ?? "")
         }
     }
 }

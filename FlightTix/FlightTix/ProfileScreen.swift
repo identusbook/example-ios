@@ -15,46 +15,55 @@ struct ProfileScreen: View {
     @State private var profileLoaded: Bool = false
     
     var body: some View {
-        ZStack {
-            if !profileLoaded {
-                Text("Loading Passport Details...")
-            } else {
-                VStack {
-                    Text("Passport Details")
-                    
-                    if let traveller = model.traveller {
-                        Form {
-                            Text("Name: \(traveller.passport.name)")
-                            Text("Passport Number: \(traveller.passport.passportNumber)")
-                            Text("Birthdate: \(DateStuff.displayISODateAsString(traveller.passport.dob.iso8601String(), showTime: false))")
-                        }
-                    } else {
-                        Form {
-                            Text("Name:")
-                            Text("Passport Number:")
-                            Text("Birthdate:")
-                        }
-                    }
+        VStack(alignment: .leading, spacing: 24) {
+            ScreenHeader(title: "Passport")
+                .padding(.top)
 
-                    Button  {
-                        dismiss()
-                    } label: {
-                        Text("Close")
-                    }
-                    
-                    Spacer()
+            if !profileLoaded {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading passport details…").foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else if let traveller = model.traveller {
+                VStack(spacing: 0) {
+                    LabeledRow(label: "Name", value: traveller.passport.name)
+                    Divider()
+                    LabeledRow(label: "Passport Number", value: traveller.passport.passportNumber)
+                    Divider()
+                    LabeledRow(label: "Birthdate",
+                               value: DateStuff.displayISODateAsString(traveller.passport.dob.iso8601String(), showTime: false))
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal)
+            } else {
+                Text("No passport found yet.")
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
             }
+
+            Spacer()
+
+            Button {
+                dismiss()
+            } label: {
+                Text("Close")
+            }
+            .buttonStyle(.secondaryAction)
+            .padding()
         }
-        .onAppear() {
-            // Check for Passport VC
-            // Load data from Passport VC
-            Task {
+        .task {
+            // Load the passport credential. Always stop the loading state afterward,
+            // even on failure, so the screen never hangs on "Loading…".
+            do {
                 try await model.getTraveller()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    profileLoaded = true
-                }
+            } catch {
+                print("Could not load passport details: \(error)")
             }
+            profileLoaded = true
         }
     }
 }

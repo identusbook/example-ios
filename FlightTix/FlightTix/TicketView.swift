@@ -27,29 +27,46 @@ struct TicketView: View {
     }
     
     var body: some View {
-        ZStack {
-            VStack {
-                if !ticketLoaded {
-                    Text("Loading Ticket Details...")
-                } else {
-                    VStack {
-                        Text("Your Ticket Details:")
-                        Text("Departure: \(model.ticket?.departure ?? "")")
-                        Text("Arrival: \(model.ticket?.arrival ?? "")")
-                        Text("Price: \(formattedPrice(model.ticket!.price))")
-                    }
+        VStack(alignment: .leading, spacing: 24) {
+            ScreenHeader(title: "Your Ticket")
+                .padding(.top)
+
+            if !ticketLoaded {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading ticket details…").foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else if let ticket = model.ticket {
+                VStack(spacing: 0) {
+                    LabeledRow(label: "Departure", value: ticket.departure)
+                    Divider()
+                    LabeledRow(label: "Arrival", value: ticket.arrival)
+                    Divider()
+                    LabeledRow(label: "Price", value: formattedPrice(ticket.price))
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal)
+            } else {
+                Text("No ticket found yet. Purchase a flight to receive one.")
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
             }
+
+            Spacer()
         }
-        .onAppear() {
-            // Check for Ticket VC
-            // Load data from Ticket VC
-            Task {
+        .task {
+            // Load the ticket credential. Always stop the loading state afterward,
+            // even on failure, so the screen never hangs on "Loading…".
+            do {
                 try await model.getTicket()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    ticketLoaded = true
-                }
+            } catch {
+                print("Could not load ticket details: \(error)")
             }
+            ticketLoaded = true
         }
     }
 }

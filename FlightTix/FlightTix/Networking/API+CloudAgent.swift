@@ -30,6 +30,12 @@ extension APIClient {
             let url = URL(string: "\(baseURL)/issue-credentials/records/\(recordId)")!
             return try await get(url: url)
         }
+
+        // Status-only fetch that decodes for any credential type (see CredentialRecordStatus).
+        func credentialRecordStatus(recordId: String) async throws -> CredentialRecordStatus? {
+            let url = URL(string: "\(baseURL)/issue-credentials/records/\(recordId)")!
+            return try await get(url: url)
+        }
         
         func createPassportCredentialOffer(request: CreateCredentialOfferRequest) async throws -> CreateCredentialOfferResponse? {
             let url = URL(string: "\(baseURL)/issue-credentials/credential-offers")!

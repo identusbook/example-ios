@@ -18,7 +18,7 @@ struct LoadingScreen: View {
         ZStack {
             VStack {
                 Spacer()
-                Text("FlightTxt")
+                Text("FlightTix")
                     .font(.largeTitle)
                 Text("powered by")
                     .font(.callout)
@@ -39,7 +39,8 @@ struct LoadingScreen: View {
                 } label: {
                     Text("Tear Down and Stop")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.secondaryAction)
+                .padding(.horizontal, 48)
                 
                 Spacer()
                 
